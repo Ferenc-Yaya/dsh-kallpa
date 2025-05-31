@@ -19,15 +19,21 @@
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
 	<bean id="webscript.alfresco.tutorials.helloworld.get"
 		  class="com.dataservicesperu.kallpa.platformsample.HelloWorldWebScript"
 		  parent="webscript">
 	</bean>
+
+	<!-- Webscript de descarga pública con configuración de seguridad -->
 	<bean id="webscript.com.dataservicesperu.kallpa.download.public-download.get"
 		  class="com.dataservicesperu.kallpa.webscripts.PublicDownloadWebScript"
 		  parent="webscript">
 		<property name="serviceRegistry">
 			<ref bean="ServiceRegistry" />
 		</property>
+		<!-- Configuración adicional para acceso guest -->
+		<property name="guestAccess" value="true"/>
 	</bean>
+
 </beans>

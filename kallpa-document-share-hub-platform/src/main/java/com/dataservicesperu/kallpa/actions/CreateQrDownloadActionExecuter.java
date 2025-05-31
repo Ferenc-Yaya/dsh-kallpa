@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
     private static Log logger = LogFactory.getLog(CreateQrDownloadActionExecuter.class);
@@ -51,32 +53,53 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             Map<QName, Serializable> props = serviceRegistry.getNodeService().getProperties(actionedUponNodeRef);
             String fileName = (String) props.get(ContentModel.PROP_NAME);
 
-            // Crear URL de descarga pública (sin autenticación)
-            // Formato: http://servidor:puerto/alfresco/d/d/workspace/SpacesStore/node-id/filename
+            // Verificar que el filename no sea null y encode para URL
+            if (fileName == null || fileName.trim().isEmpty()) {
+                logger.error("El nombre del archivo es null o vacío");
+                return;
+            }
+
+            // Crear URL de descarga pública correcta
             String nodeId = actionedUponNodeRef.getId();
-            String baseUrl = getBaseUrl(); // Método helper para obtener la URL base
-            String downloadUrl = String.format("%s/alfresco/s/kallpa/download/workspace/SpacesStore/%s/%s",
-                    baseUrl, nodeId, fileName);
+            String baseUrl = getBaseUrl();
+
+            // Encode del filename para URL
+            String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
+
+            // URL corregida - nota el cambio de /s/kallpa a /service/kallpa
+            String downloadUrl = String.format("%s/alfresco/service/kallpa/download/workspace/SpacesStore/%s/%s",
+                    baseUrl, nodeId, encodedFileName);
 
             logger.info("Generando QR con URL de descarga: " + downloadUrl);
 
             // Generar QR con la URL de descarga
             ContentWriter writer = serviceRegistry.getContentService().getWriter(actionedUponNodeRef,
                     ContentModel.PROP_CONTENT, true);
+            writer.setMimetype("application/pdf");
 
             PdfReader pdfReader = new PdfReader(reader.getContentInputStream());
             PdfStamper stamper = new PdfStamper(pdfReader, writer.getContentOutputStream());
+
+            // Verificar que el PDF tenga al menos una página
+            if (pdfReader.getNumberOfPages() < 1) {
+                logger.error("El PDF no tiene páginas");
+                stamper.close();
+                pdfReader.close();
+                return;
+            }
 
             int pageNo = 1;
             PdfContentByte over = stamper.getOverContent(pageNo);
 
             // Crear QR code con la URL de descarga
-            BarcodeQRCode barcodeQRCode = new BarcodeQRCode(downloadUrl, 1, 1, null);
+            BarcodeQRCode barcodeQRCode = new BarcodeQRCode(downloadUrl, 200, 200, null);
             Image qrcodeImage = barcodeQRCode.getImage();
 
             // Posicionar el QR en la esquina superior derecha
-            qrcodeImage.setAbsolutePosition(pdfReader.getPageSize(pageNo).getWidth() - 110,
-                    pdfReader.getPageSize(pageNo).getHeight() - 110);
+            float pageWidth = pdfReader.getPageSize(pageNo).getWidth();
+            float pageHeight = pdfReader.getPageSize(pageNo).getHeight();
+
+            qrcodeImage.setAbsolutePosition(pageWidth - 110, pageHeight - 110);
             qrcodeImage.scaleAbsolute(100, 100);
 
             over.addImage(qrcodeImage);
@@ -94,31 +117,34 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
         } catch (DocumentException e) {
             logger.error("Error de documento PDF al agregar QR", e);
             throw new RuntimeException("Error al manipular el documento PDF", e);
+        } catch (Exception e) {
+            logger.error("Error inesperado al generar QR", e);
+            throw new RuntimeException("Error inesperado al generar QR", e);
         }
     }
 
     /**
      * Método helper para obtener la URL base del servidor
-     * Puedes configurar esto como una propiedad del sistema o hardcodearlo según tu configuración
      */
     private String getBaseUrl() {
-        // Opción 1: Obtener desde propiedades del sistema
+        // Intentar obtener desde propiedades del sistema
         String baseUrl = System.getProperty("alfresco.base.url");
         if (baseUrl != null && !baseUrl.isEmpty()) {
-            return baseUrl;
+            return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         }
 
-        // Opción 2: Obtener desde configuración de Alfresco
+        // Intentar obtener desde configuración global de alfresco
         try {
             String alfrescoHost = System.getProperty("alfresco.host", "localhost");
             String alfrescoPort = System.getProperty("alfresco.port", "8080");
             String alfrescoProtocol = System.getProperty("alfresco.protocol", "http");
+
             return String.format("%s://%s:%s", alfrescoProtocol, alfrescoHost, alfrescoPort);
         } catch (Exception e) {
             logger.warn("No se pudo obtener la configuración del servidor, usando valor por defecto");
         }
 
-        // Opción 3: Valor por defecto (ajustar según tu configuración)
+        // Valor por defecto - ajustar según tu configuración
         return "http://localhost:8080";
     }
 }
