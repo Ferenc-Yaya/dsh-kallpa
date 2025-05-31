@@ -55,7 +55,7 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             // Formato: http://servidor:puerto/alfresco/d/d/workspace/SpacesStore/node-id/filename
             String nodeId = actionedUponNodeRef.getId();
             String baseUrl = getBaseUrl(); // Método helper para obtener la URL base
-            String downloadUrl = String.format("%s/alfresco/d/d/workspace/SpacesStore/%s/%s",
+            String downloadUrl = String.format("%s/alfresco/s/kallpa/download/workspace/SpacesStore/%s/%s",
                     baseUrl, nodeId, fileName);
 
             logger.info("Generando QR con URL de descarga: " + downloadUrl);

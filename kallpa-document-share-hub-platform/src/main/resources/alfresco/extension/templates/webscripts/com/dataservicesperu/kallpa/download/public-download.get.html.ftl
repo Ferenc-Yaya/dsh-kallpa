@@ -1,0 +1,1 @@
+<#-- Template vacío - la descarga se maneja en Java -->

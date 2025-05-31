@@ -23,4 +23,11 @@
 		  class="com.dataservicesperu.kallpa.platformsample.HelloWorldWebScript"
 		  parent="webscript">
 	</bean>
+	<bean id="webscript.com.dataservicesperu.kallpa.download.public-download.get"
+		  class="com.dataservicesperu.kallpa.webscripts.PublicDownloadWebScript"
+		  parent="webscript">
+		<property name="serviceRegistry">
+			<ref bean="ServiceRegistry" />
+		</property>
+	</bean>
 </beans>

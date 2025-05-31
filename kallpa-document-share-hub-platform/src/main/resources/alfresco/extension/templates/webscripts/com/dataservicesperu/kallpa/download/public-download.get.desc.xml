@@ -1,0 +1,7 @@
+<webscript>
+    <shortname>Public Download</shortname>
+    <description>Public download for documents with QR codes</description>
+    <url>/kallpa/download/{store_type}/{store_id}/{id}/{filename}</url>
+    <authentication>none</authentication>
+    <transaction>required</transaction>
+</webscript>
