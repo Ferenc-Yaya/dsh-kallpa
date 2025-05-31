@@ -36,6 +36,11 @@
         <property name="nodeService" ref="NodeService" />
         <property name="nodeLocatorService" ref="nodeLocatorService" />
     </bean>
-
+    <!-- Action para agregar QR con enlace de descarga -->
+    <bean id="createQrDownload" class="com.dataservicesperu.kallpa.actions.CreateQrDownloadActionExecuter" parent="action-executer">
+        <property name="serviceRegistry">
+            <ref bean="ServiceRegistry" />
+        </property>
+    </bean>
 
 </beans>

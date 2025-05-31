@@ -443,5 +443,30 @@
             </form>
         </forms>
     </config>
-
+    <!-- Configuración para acción de QR con enlace de descarga -->
+    <config evaluator="string-compare" condition="DocLibActions">
+        <actions>
+            <action id="createQrDownload"
+                    type="javascript"
+                    label="kallpa.doclib.action.createQrDownload.label"
+                    icon="download">
+                <param name="function">onActionSimpleRepoAction</param>
+                <param name="action">createQrDownload</param>
+                <param name="successMessage">kallpa.doclib.action.createQrDownload.msg.success</param>
+                <param name="failureMessage">kallpa.doclib.action.createQrDownload.msg.failure</param>
+                <evaluator>kallpa.createQR.evaluator.pdfEvaluator</evaluator>
+            </action>
+        </actions>
+        <actionGroups>
+            <actionGroup id="document-browse">
+                <action index="400" id="createQrDownload" />
+            </actionGroup>
+            <actionGroup id="document-details">
+                <action index="400" id="createQrDownload" />
+            </actionGroup>
+            <actionGroup id="document-selected">
+                <action index="400" id="createQrDownload" />
+            </actionGroup>
+        </actionGroups>
+    </config>
 </alfresco-config>
