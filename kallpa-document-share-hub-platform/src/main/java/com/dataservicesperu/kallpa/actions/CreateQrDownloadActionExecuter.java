@@ -19,6 +19,7 @@ import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.namespace.QName;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -29,7 +30,11 @@ import java.nio.charset.StandardCharsets;
 
 public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
     private static Log logger = LogFactory.getLog(CreateQrDownloadActionExecuter.class);
+
     private ServiceRegistry serviceRegistry;
+
+    @Value("${alfresco.base.url}")
+    private String baseUrl;
 
     public void setServiceRegistry(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
@@ -122,29 +127,16 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             throw new RuntimeException("Error inesperado al generar QR", e);
         }
     }
-
     /**
-     * Método helper para obtener la URL base del servidor
+     * Obtiene la URL base desde configuración inyectada automáticamente
      */
     private String getBaseUrl() {
-        // Intentar obtener desde propiedades del sistema
-        String baseUrl = System.getProperty("alfresco.base.url");
         if (baseUrl != null && !baseUrl.isEmpty()) {
+            logger.info("Usando URL base desde properties: " + baseUrl);
             return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         }
 
-        // Intentar obtener desde configuración global de alfresco
-        try {
-            String alfrescoHost = System.getProperty("alfresco.host", "localhost");
-            String alfrescoPort = System.getProperty("alfresco.port", "8080");
-            String alfrescoProtocol = System.getProperty("alfresco.protocol", "http");
-
-            return String.format("%s://%s:%s", alfrescoProtocol, alfrescoHost, alfrescoPort);
-        } catch (Exception e) {
-            logger.warn("No se pudo obtener la configuración del servidor, usando valor por defecto");
-        }
-
-        // Valor por defecto - ajustar según tu configuración
-        return "http://localhost:8080";
+        logger.error("alfresco.base.url no está configurado");
+        throw new RuntimeException("alfresco.base.url requerido en properties");
     }
 }
