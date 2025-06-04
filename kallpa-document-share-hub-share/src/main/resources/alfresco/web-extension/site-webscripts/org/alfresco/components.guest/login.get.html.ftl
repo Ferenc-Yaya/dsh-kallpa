@@ -1,10 +1,58 @@
 <@markup id="css" >
    <#-- CSS Dependencies -->
    <@link href="${url.context}/res/components/guest/login.css" group="login"/>
-   <#-- fondo a azul -->
+   <#-- CSS personalizado para cambiar colores naranjas a azules -->
    <style type="text/css">
+      /* Campos de entrada - cambiar borde naranja a azul */
+      .login input[type="text"], .login input[type="password"] {
+         border: 2px solid rgba(102, 126, 234, 0.3) !important;
+         border-radius: 6px !important;
+         background-color: rgba(255, 255, 255, 0.95) !important;
+         outline: none !important;
+         font-size: 120% !important;
+         width: 316px !important;
+         padding: 12px 15px !important;
+         transition: all 0.3s ease !important;
+      }
+
+      /* Focus de campos de entrada - cambiar a azul */
+      .login input[type="text"]:focus, .login input[type="password"]:focus {
+         border-color: #667eea !important;
+         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+         background-color: white !important;
+      }
+
+      /* Botón de login - cambiar de naranja a azul */
+      .login input[type="submit"], .login .login-button {
+         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+         background-color: #667eea !important;
+         border: 2px solid #667eea !important;
+         border-radius: 8px !important;
+         color: white !important;
+         font-family: 'Open Sans Bold', Arial, sans-serif !important;
+         font-size: 120% !important;
+         font-weight: bold !important;
+         width: 318px !important;
+         height: 50px !important;
+         padding: 12px 15px !important;
+         transition: all 0.3s ease !important;
+         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+         cursor: pointer !important;
+         text-transform: uppercase !important;
+      }
+
+      /* Hover del botón - cambiar a azul más oscuro */
+      .login input[type="submit"]:hover, .login .login-button:hover {
+         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+         background-color: #5a67d8 !important;
+         border-color: #5a67d8 !important;
+         transform: translateY(-2px) !important;
+         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+      }
+
+      /* Asegurar que el fondo sea transparente para mostrar la imagen */
       body.alfresco-share.alfresco-guest {
-          background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #5dade2 100%) !important;
+          background: transparent !important;
       }
    </style>
 </@>
@@ -21,13 +69,27 @@
 <@markup id="html">
    <@uniqueIdDiv>
       <#assign el=args.htmlid?html>
+
+      <!-- Fondo personalizado -->
+      <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                  background: url('${url.context}/res/images/fondo-corporativo.png') no-repeat center center;
+                  background-size: cover; z-index: -2;"></div>
+
+      <!-- Overlay para mejorar legibilidad -->
+      <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                  background: rgba(0, 0, 0, 0.3); z-index: -1;"></div>
+
       <div id="${el}-body" class="theme-overlay login hidden">
 
       <@markup id="header">
-         <div class="theme-company-logo"></div>
-         <div class="product-name">${msg("app.name")}</div>
-         <div class="product-tagline">${msg("app.tagline")}</div>
-         <div class="product-community">${msg("app.community")}</div>
+         <div style="text-align: center; margin-bottom: 30px;">
+             <img src="${url.context}/res/images/logo-dsh.png"
+                  alt="DSH Document Share Hub"
+                  style="max-width: 200px; height: auto; display: block; margin: 0 auto 15px auto;">
+             <div style="color: #333; font-size: 18px; font-weight: bold;">
+                 DOCUMENT SHARE HUB
+             </div>
+         </div>
       </@markup>
 
       <#if errorDisplay == "container">
