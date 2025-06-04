@@ -1,5 +1,5 @@
 <@markup id="css" >
-   <#-- CSS Dependencies -->
+   <#-- CSS Dependencies   -->
    <@link href="${url.context}/res/components/guest/login.css" group="login"/>
    <#-- CSS personalizado para cambiar colores naranjas a azules -->
    <style type="text/css">
