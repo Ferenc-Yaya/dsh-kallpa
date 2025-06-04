@@ -13,6 +13,7 @@
          width: 316px !important;
          padding: 12px 15px !important;
          transition: all 0.3s ease !important;
+         box-sizing: border-box !important;
       }
 
       /* Focus de campos de entrada - cambiar a azul */
@@ -22,7 +23,7 @@
          background-color: white !important;
       }
 
-      /* Botón de login - cambiar de naranja a azul */
+      /* Botón de login - cambiar de naranja a azul - MISMO ANCHO QUE LOS CAMPOS */
       .login input[type="submit"], .login .login-button {
          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
          background-color: #667eea !important;
@@ -32,13 +33,14 @@
          font-family: 'Open Sans Bold', Arial, sans-serif !important;
          font-size: 120% !important;
          font-weight: bold !important;
-         width: 318px !important;
+         width: 316px !important;
          height: 50px !important;
          padding: 12px 15px !important;
          transition: all 0.3s ease !important;
          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
          cursor: pointer !important;
          text-transform: uppercase !important;
+         box-sizing: border-box !important;
       }
 
       /* Hover del botón - cambiar a azul más oscuro */
