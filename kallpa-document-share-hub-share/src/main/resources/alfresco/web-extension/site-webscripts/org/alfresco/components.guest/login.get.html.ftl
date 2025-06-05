@@ -3,6 +3,8 @@
    <@link href="${url.context}/res/components/guest/login.css" group="login"/>
    <#-- CSS personalizado para cambiar colores naranjas a azules -->
    <style type="text/css">
+      /* CSS CORRECTO para el botón YUI de Alfresco */
+
       /* Campos de entrada - cambiar borde naranja a azul */
       .login input[type="text"], .login input[type="password"] {
          border: 2px solid rgba(102, 126, 234, 0.3) !important;
@@ -23,38 +25,61 @@
          background-color: white !important;
       }
 
-      /* Botón de login - cambiar de naranja a azul - MISMO ANCHO QUE LOS CAMPOS */
-      .login input[type="submit"], .login .login-button {
-         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-         background-color: #667eea !important;
-         border: 2px solid #667eea !important;
-         border-radius: 8px !important;
-         color: white !important;
-         font-family: 'Open Sans Bold', Arial, sans-serif !important;
-         font-size: 120% !important;
-         font-weight: bold !important;
-         width: 316px !important;
-         height: 50px !important;
-         padding: 12px 15px !important;
-         transition: all 0.3s ease !important;
-         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
-         cursor: pointer !important;
-         text-transform: uppercase !important;
-         box-sizing: border-box !important;
+      /* BOTÓN YUI - Selectores exactos basados en tu inspección */
+      .form-fields.login .form-field > span.yui-button > .first-child > button {
+          background: #667eea !important;
+          background-color: #667eea !important;
+          background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          border: 2px solid #667eea !important;
+          border-radius: 8px !important;
+          color: white !important;
+          font-weight: bold !important;
+          text-transform: uppercase !important;
+          width: 316px !important;
+          height: 50px !important;
+          padding: 12px 15px !important;
+          box-sizing: border-box !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
       }
 
-      /* Hover del botón - cambiar a azul más oscuro */
-      .login input[type="submit"]:hover, .login .login-button:hover {
-         background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
-         background-color: #5a67d8 !important;
-         border-color: #5a67d8 !important;
-         transform: translateY(-2px) !important;
-         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+      /* Hover para el botón YUI */
+      .form-fields.login .form-field > span.yui-button > .first-child > button:hover {
+          background: #5a67d8 !important;
+          background-color: #5a67d8 !important;
+          background-image: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+          border-color: #5a67d8 !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+      }
+
+      /* También sobrescribir el contenedor del botón YUI */
+      .form-fields.login .form-field > span.yui-button {
+          width: 316px !important;
+          background: none !important;
+          border: none !important;
+      }
+
+      .form-fields.login .form-field > span.yui-button > .first-child {
+          background: none !important;
+          border: none !important;
       }
 
       /* Asegurar que el fondo sea transparente para mostrar la imagen */
       body.alfresco-share.alfresco-guest {
           background: transparent !important;
+      }
+      /* Estilo profesional refinado para DOCUMENT SHARE HUB */
+      .dsh-title-futuristic {
+          color: #667eea; /* Color azul del botón para consistencia */
+          font-size: 20px; /* Tamaño ligeramente más grande */
+          font-weight: 700; /* Más peso para que resalte */
+          letter-spacing: 2px; /* Más espaciado para elegancia */
+          font-family: 'Open Sans', Arial, sans-serif; /* Fuente específica */
+          text-transform: uppercase; /* Mayúsculas para impacto */
+          margin-top: 12px;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil para profundidad */
       }
    </style>
 </@>
@@ -88,7 +113,7 @@
              <img src="${url.context}/res/images/logo-dsh.png"
                   alt="DSH Document Share Hub"
                   style="max-width: 200px; height: auto; display: block; margin: 0 auto 15px auto;">
-             <div style="color: #333; font-size: 18px; font-weight: bold;">
+             <div class="dsh-title-futuristic">
                  DOCUMENT SHARE HUB
              </div>
          </div>
