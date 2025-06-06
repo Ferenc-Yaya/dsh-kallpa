@@ -2,7 +2,7 @@
     <shortname>Public Download</shortname>
     <description>Public download for documents with QR codes - No authentication required</description>
     <url>/kallpa/download/{store_type}/{store_id}/{id}/{filename}</url>
-    <authentication>guest</authentication>
+    <authentication>none</authentication>
     <transaction>none</transaction>
     <format default="">extension</format>
     <lifecycle>internal</lifecycle>

@@ -5,7 +5,7 @@ import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.ContentReader;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.StoreRef;
-import org.alfresco.service.cmr.security.AuthenticationService;
+import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.springframework.extensions.webscripts.AbstractWebScript;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
@@ -39,13 +39,31 @@ public class PublicDownloadWebScript extends AbstractWebScript {
         OutputStream outputStream = null;
 
         try {
-            // Autenticación como guest si es necesario
-            AuthenticationService authService = serviceRegistry.getAuthenticationService();
-            if (authService.getCurrentUserName() == null) {
-                authService.authenticateAsGuest();
-                logger.info("Autenticado como guest para descarga pública");
-            }
+            // Ejecutar como sistema para evitar problemas de contexto de seguridad
+            AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
+                @Override
+                public Void doWork() throws Exception {
+                    executeDownload(req, res);
+                    return null;
+                }
+            });
 
+        } catch (Exception e) {
+            logger.error("Error en descarga pública", e);
+            try {
+                res.setStatus(Status.STATUS_INTERNAL_SERVER_ERROR);
+                res.getWriter().write("Error interno del servidor: " + e.getMessage());
+            } catch (IOException ioException) {
+                logger.error("Error adicional al escribir respuesta de error", ioException);
+            }
+        }
+    }
+
+    private void executeDownload(WebScriptRequest req, WebScriptResponse res) throws Exception {
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+
+        try {
             // Obtener parámetros de la URL usando template variables
             Map<String, String> templateVars = req.getServiceMatch().getTemplateVars();
             String storeType = templateVars.get("store_type");
@@ -58,7 +76,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
             logger.info("  - Store ID: " + storeId);
             logger.info("  - Node ID: " + nodeId);
             logger.info("  - Filename: " + filename);
-            logger.info("  - Usuario: " + authService.getCurrentUserName());
 
             // Validar parámetros
             if (storeType == null || storeId == null || nodeId == null || filename == null) {
@@ -76,7 +93,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 logger.error("Error al decodificar filename: " + filename, e);
                 decodedFilename = filename;
             }
-            logger.info("Archivo decodificado: " + decodedFilename);
 
             // Crear NodeRef
             StoreRef storeRef = new StoreRef(storeType, storeId);
@@ -90,7 +106,7 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Verificar que es un documento (no una carpeta)
+            // Verificar que es un documento
             if (!serviceRegistry.getDictionaryService().isSubClass(
                     serviceRegistry.getNodeService().getType(nodeRef), ContentModel.TYPE_CONTENT)) {
                 logger.warn("El nodo no es un documento: " + nodeRef);
@@ -108,21 +124,17 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Verificar el nombre del archivo desde las propiedades del nodo
+            // Verificar el nombre del archivo
             String actualName = (String) serviceRegistry.getNodeService().getProperty(nodeRef, ContentModel.PROP_NAME);
-            if (actualName == null || !actualName.equals(decodedFilename)) {
-                logger.warn("El nombre del archivo no coincide. Esperado: " + decodedFilename + ", Actual: " + actualName);
-                // Usar el nombre actual del archivo en lugar del solicitado
-                decodedFilename = actualName != null ? actualName : decodedFilename;
+            if (actualName != null) {
+                decodedFilename = actualName;
             }
 
             // Configurar headers para descarga
             String mimetype = reader.getMimetype();
             long size = reader.getSize();
 
-            logger.info("Configurando descarga:");
-            logger.info("  - Mimetype: " + mimetype);
-            logger.info("  - Size: " + size + " bytes");
+            logger.info("Configurando descarga: " + decodedFilename + " (" + size + " bytes)");
 
             res.setContentType(mimetype);
             res.setHeader("Content-Disposition", "attachment; filename=\"" + decodedFilename + "\"");
@@ -148,31 +160,15 @@ public class PublicDownloadWebScript extends AbstractWebScript {
             }
 
             outputStream.flush();
-            logger.info("Descarga completada exitosamente: " + decodedFilename + " (" + totalBytesRead + " bytes transferidos)");
+            logger.info("Descarga completada: " + decodedFilename + " (" + totalBytesRead + " bytes)");
 
-        } catch (Exception e) {
-            logger.error("Error en descarga pública para archivo: " + (req.getServiceMatch().getTemplateVars().get("filename")), e);
-            try {
-                res.setStatus(Status.STATUS_INTERNAL_SERVER_ERROR);
-                res.getWriter().write("Error interno del servidor: " + e.getMessage());
-            } catch (IOException ioException) {
-                logger.error("Error adicional al escribir respuesta de error", ioException);
-            }
         } finally {
-            // Cerrar streams de forma segura
+            // Cerrar streams
             if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    logger.error("Error al cerrar inputStream", e);
-                }
+                try { inputStream.close(); } catch (IOException e) { logger.error("Error cerrando inputStream", e); }
             }
             if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    logger.error("Error al cerrar outputStream", e);
-                }
+                try { outputStream.close(); } catch (IOException e) { logger.error("Error cerrando outputStream", e); }
             }
         }
     }
