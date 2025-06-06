@@ -195,7 +195,11 @@
       </div>
 
       <@markup id="footer">
-      <div class="login-copy">${msg("label.copyright")}</div>
+      <div class="login-copy">
+          Sistema de Gestion Documentario Document Share Hub<br>
+          Conecta. Comparte. Gestiona.<br>
+          powered by Data Services © 2025
+      </div>
       </@markup>
    </@>
 </@>
