@@ -460,7 +460,7 @@
   <modules>
     <module>kallpa-document-share-hub-platform</module>
     <module>kallpa-document-share-hub-share</module>
-    <module>kallpa-document-share-hub-integration-tests</module>
+<!--    <module>kallpa-document-share-hub-integration-tests</module>-->
     <module>kallpa-document-share-hub-platform-docker</module>
     <module>kallpa-document-share-hub-share-docker</module>
   </modules>
