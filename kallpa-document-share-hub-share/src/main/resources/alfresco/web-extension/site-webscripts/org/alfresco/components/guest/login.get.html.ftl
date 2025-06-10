@@ -84,10 +84,6 @@
    </style>
 </@>
 
-<script type="text/javascript">
-   document.title = 'DSH - Document Share Hub';
-</script>
-
 <@markup id="js">
    <#-- JavaScript Dependencies -->
    <@script src="${url.context}/res/components/guest/login.js" group="login"/>
