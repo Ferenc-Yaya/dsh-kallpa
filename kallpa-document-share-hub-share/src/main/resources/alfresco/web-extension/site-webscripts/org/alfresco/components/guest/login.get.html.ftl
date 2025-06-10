@@ -86,13 +86,6 @@
 
 <script type="text/javascript">
    document.title = 'DSH - Document Share Hub';
-
-   document.addEventListener('DOMContentLoaded', function() {
-      var link = document.createElement('link');
-      link.rel = 'icon';
-      link.href = '/share/res/favicon.ico?v=' + new Date().getTime();
-      document.head.appendChild(link);
-   });
 </script>
 
 <@markup id="js">
