@@ -19,11 +19,4 @@
     <namespaces>
         <namespace uri="http://www.dataservicesperu.kallpa/model/content/1.0" prefix="kallpa"/>
     </namespaces>
-
-    <!--
-        Por ahora modelo mínimo.
-        Agregar tipos y aspectos personalizados aquí cuando sean necesarios
-        para funcionalidad específica de QR o Document Share Hub
-    -->
-
 </model>

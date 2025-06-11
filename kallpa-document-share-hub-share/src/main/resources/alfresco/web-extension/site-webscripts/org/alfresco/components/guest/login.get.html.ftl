@@ -1,11 +1,6 @@
 <@markup id="css" >
-   <#-- CSS Dependencies   -->
    <@link href="${url.context}/res/components/guest/login.css" group="login"/>
-   <#-- CSS personalizado para cambiar colores naranjas a azules -->
    <style type="text/css">
-      /* CSS CORRECTO para el botón YUI de Alfresco */
-
-      /* Campos de entrada - cambiar borde naranja a azul */
       .login input[type="text"], .login input[type="password"] {
          border: 2px solid rgba(102, 126, 234, 0.3) !important;
          border-radius: 6px !important;
@@ -17,15 +12,11 @@
          transition: all 0.3s ease !important;
          box-sizing: border-box !important;
       }
-
-      /* Focus de campos de entrada - cambiar a azul */
       .login input[type="text"]:focus, .login input[type="password"]:focus {
          border-color: #667eea !important;
          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
          background-color: white !important;
       }
-
-      /* BOTÓN YUI - Selectores exactos basados en tu inspección */
       .form-fields.login .form-field > span.yui-button > .first-child > button {
           background: #667eea !important;
           background-color: #667eea !important;
@@ -43,8 +34,6 @@
           transition: all 0.3s ease !important;
           box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
       }
-
-      /* Hover para el botón YUI */
       .form-fields.login .form-field > span.yui-button > .first-child > button:hover {
           background: #5a67d8 !important;
           background-color: #5a67d8 !important;
@@ -53,39 +42,32 @@
           transform: translateY(-2px) !important;
           box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
       }
-
-      /* También sobrescribir el contenedor del botón YUI */
       .form-fields.login .form-field > span.yui-button {
           width: 316px !important;
           background: none !important;
           border: none !important;
       }
-
       .form-fields.login .form-field > span.yui-button > .first-child {
           background: none !important;
           border: none !important;
       }
-
-      /* Asegurar que el fondo sea transparente para mostrar la imagen */
       body.alfresco-share.alfresco-guest {
           background: transparent !important;
       }
-      /* Estilo profesional refinado para DOCUMENT SHARE HUB */
       .dsh-title-futuristic {
-          color: #667eea; /* Color azul del botón para consistencia */
-          font-size: 20px; /* Tamaño ligeramente más grande */
-          font-weight: 700; /* Más peso para que resalte */
-          letter-spacing: 2px; /* Más espaciado para elegancia */
-          font-family: 'Open Sans', Arial, sans-serif; /* Fuente específica */
-          text-transform: uppercase; /* Mayúsculas para impacto */
+          color: #667eea;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          font-family: 'Open Sans', Arial, sans-serif;
+          text-transform: uppercase;
           margin-top: 12px;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil para profundidad */
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
       }
    </style>
 </@>
 
 <@markup id="js">
-   <#-- JavaScript Dependencies -->
    <@script src="${url.context}/res/components/guest/login.js" group="login"/>
 </@>
 
@@ -97,12 +79,10 @@
    <@uniqueIdDiv>
       <#assign el=args.htmlid?html>
 
-      <!-- Fondo personalizado -->
       <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
                   background: url('${url.context}/res/images/fondo-corporativo.png') no-repeat center center;
                   background-size: cover; z-index: -2;"></div>
 
-      <!-- Overlay para mejorar legibilidad -->
       <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
                   background: rgba(0, 0, 0, 0.3); z-index: -1;"></div>
 

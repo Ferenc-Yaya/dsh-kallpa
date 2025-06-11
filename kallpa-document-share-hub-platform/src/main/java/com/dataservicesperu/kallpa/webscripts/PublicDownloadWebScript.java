@@ -39,13 +39,9 @@ public class PublicDownloadWebScript extends AbstractWebScript {
         OutputStream outputStream = null;
 
         try {
-            // Ejecutar como sistema para evitar problemas de contexto de seguridad
-            AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
-                @Override
-                public Void doWork() throws Exception {
-                    executeDownload(req, res);
-                    return null;
-                }
+            AuthenticationUtil.runAsSystem((AuthenticationUtil.RunAsWork<Void>) () -> {
+                executeDownload(req, res);
+                return null;
             });
 
         } catch (Exception e) {
@@ -64,7 +60,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
         OutputStream outputStream = null;
 
         try {
-            // Obtener parámetros de la URL usando template variables
             Map<String, String> templateVars = req.getServiceMatch().getTemplateVars();
             String storeType = templateVars.get("store_type");
             String storeId = templateVars.get("store_id");
@@ -77,7 +72,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
             logger.info("  - Node ID: " + nodeId);
             logger.info("  - Filename: " + filename);
 
-            // Validar parámetros
             if (storeType == null || storeId == null || nodeId == null || filename == null) {
                 logger.error("Parámetros faltantes en la URL");
                 res.setStatus(Status.STATUS_BAD_REQUEST);
@@ -85,7 +79,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Decode del filename
             String decodedFilename;
             try {
                 decodedFilename = URLDecoder.decode(filename, StandardCharsets.UTF_8.toString());
@@ -94,11 +87,9 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 decodedFilename = filename;
             }
 
-            // Crear NodeRef
             StoreRef storeRef = new StoreRef(storeType, storeId);
             NodeRef nodeRef = new NodeRef(storeRef, nodeId);
 
-            // Verificar que el nodo existe
             if (!serviceRegistry.getNodeService().exists(nodeRef)) {
                 logger.warn("Nodo no encontrado: " + nodeRef);
                 res.setStatus(Status.STATUS_NOT_FOUND);
@@ -106,7 +97,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Verificar que es un documento
             if (!serviceRegistry.getDictionaryService().isSubClass(
                     serviceRegistry.getNodeService().getType(nodeRef), ContentModel.TYPE_CONTENT)) {
                 logger.warn("El nodo no es un documento: " + nodeRef);
@@ -115,7 +105,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Obtener el contenido
             ContentReader reader = serviceRegistry.getContentService().getReader(nodeRef, ContentModel.PROP_CONTENT);
             if (reader == null || !reader.exists()) {
                 logger.warn("Contenido no encontrado para el nodo: " + nodeRef);
@@ -124,13 +113,11 @@ public class PublicDownloadWebScript extends AbstractWebScript {
                 return;
             }
 
-            // Verificar el nombre del archivo
             String actualName = (String) serviceRegistry.getNodeService().getProperty(nodeRef, ContentModel.PROP_NAME);
             if (actualName != null) {
                 decodedFilename = actualName;
             }
 
-            // Configurar headers para descarga
             String mimetype = reader.getMimetype();
             long size = reader.getSize();
 
@@ -146,7 +133,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
             res.setHeader("Access-Control-Allow-Methods", "GET");
             res.setStatus(Status.STATUS_OK);
 
-            // Transmitir el contenido
             inputStream = reader.getContentInputStream();
             outputStream = res.getOutputStream();
 
@@ -163,7 +149,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
             logger.info("Descarga completada: " + decodedFilename + " (" + totalBytesRead + " bytes)");
 
         } finally {
-            // Cerrar streams
             if (inputStream != null) {
                 try { inputStream.close(); } catch (IOException e) { logger.error("Error cerrando inputStream", e); }
             }

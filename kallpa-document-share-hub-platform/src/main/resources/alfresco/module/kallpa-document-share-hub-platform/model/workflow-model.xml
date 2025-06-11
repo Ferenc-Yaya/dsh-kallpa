@@ -18,9 +18,5 @@
     <namespaces>
         <namespace uri="http://www.acme.org/model/workflow/1.0" prefix="acmew"/>
     </namespaces>
-
-    <!-- ===============================================================================================================
-        Constraints, Types, and Aspects go here...
-        -->
 </model>
 

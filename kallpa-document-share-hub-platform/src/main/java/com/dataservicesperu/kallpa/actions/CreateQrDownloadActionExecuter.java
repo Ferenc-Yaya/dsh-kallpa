@@ -29,6 +29,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
+
     private static Log logger = LogFactory.getLog(CreateQrDownloadActionExecuter.class);
 
     private ServiceRegistry serviceRegistry;
@@ -42,7 +43,7 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
 
     @Override
     protected void addParameterDefinitions(List<ParameterDefinition> paramList) {
-        // No parameters needed
+
     }
 
     @Override
@@ -54,24 +55,19 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
         }
 
         try {
-            // Obtener información del documento
             Map<QName, Serializable> props = serviceRegistry.getNodeService().getProperties(actionedUponNodeRef);
             String fileName = (String) props.get(ContentModel.PROP_NAME);
 
-            // Verificar que el filename no sea null y encode para URL
             if (fileName == null || fileName.trim().isEmpty()) {
                 logger.error("El nombre del archivo es null o vacío");
                 return;
             }
 
-            // Crear URL de descarga pública correcta
             String nodeId = actionedUponNodeRef.getId();
             String baseUrl = getBaseUrl();
 
-            // Encode del filename para URL
             String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
 
-            // URL corregida - nota el cambio de /s/kallpa a /service/kallpa
             String downloadUrl = String.format("%s/alfresco/service/kallpa/download/workspace/SpacesStore/%s/%s",
                     baseUrl, nodeId, encodedFileName);
 
@@ -85,7 +81,6 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             PdfReader pdfReader = new PdfReader(reader.getContentInputStream());
             PdfStamper stamper = new PdfStamper(pdfReader, writer.getContentOutputStream());
 
-            // Verificar que el PDF tenga al menos una página
             if (pdfReader.getNumberOfPages() < 1) {
                 logger.error("El PDF no tiene páginas");
                 stamper.close();
@@ -96,11 +91,9 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             int pageNo = 1;
             PdfContentByte over = stamper.getOverContent(pageNo);
 
-            // Crear QR code con la URL de descarga
             BarcodeQRCode barcodeQRCode = new BarcodeQRCode(downloadUrl, 200, 200, null);
             Image qrcodeImage = barcodeQRCode.getImage();
 
-            // Posicionar el QR en la esquina superior derecha
             float pageWidth = pdfReader.getPageSize(pageNo).getWidth();
             float pageHeight = pdfReader.getPageSize(pageNo).getHeight();
 
