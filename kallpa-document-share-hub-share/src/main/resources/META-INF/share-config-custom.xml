@@ -17,7 +17,7 @@
                 <appearance>
                     <field id="bpm:status">
                         <control template="/org/alfresco/components/form/controls/selectone.ftl">
-                            <control-param name="options">Aún no iniciado,En curso,Completado,Cancelado</control-param>
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
                         </control>
                     </field>
                 </appearance>
@@ -31,7 +31,7 @@
                 <appearance>
                     <field id="bpm:status">
                         <control template="/org/alfresco/components/form/controls/selectone.ftl">
-                            <control-param name="options">Aún no iniciado,En curso,Completado,Cancelado</control-param>
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
                         </control>
                     </field>
                 </appearance>
