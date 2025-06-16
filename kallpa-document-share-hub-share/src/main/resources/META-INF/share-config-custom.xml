@@ -10,7 +10,25 @@
              alfresco/tomcat/shared/classes/alfresco/web-extension/share-config-custom.xml
      -->
 <alfresco-config>
-    <!-- Quitar opción "En espera" de todas las tareas -->
+    <!-- Configuración general para todas las tareas de flujo de trabajo -->
+    <config evaluator="task-type" condition="bpm:workflowTask">
+        <forms>
+            <form>
+                <field-visibility>
+                    <show id="bpm:status" />
+                </field-visibility>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Configuración para tareas adhoc (envío inicial) -->
     <config evaluator="task-type" condition="wf:adhocTask">
         <forms>
             <form>
@@ -25,6 +43,7 @@
         </forms>
     </config>
 
+    <!-- Configuración para tareas adhoc enviadas -->
     <config evaluator="task-type" condition="wf:submitAdhocTask">
         <forms>
             <form>
@@ -38,6 +57,82 @@
             </form>
         </forms>
     </config>
+
+    <!-- Configuración para tareas adhoc completadas -->
+    <config evaluator="task-type" condition="wf:completedAdhocTask">
+        <forms>
+            <form>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Configuración para tareas de revisión -->
+    <config evaluator="task-type" condition="wf:reviewTask">
+        <forms>
+            <form>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Configuración para tareas activiti -->
+    <config evaluator="task-type" condition="wf:activitiReviewTask">
+        <forms>
+            <form>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Configuración para tareas aprobadas -->
+    <config evaluator="task-type" condition="wf:approvedTask">
+        <forms>
+            <form>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
+    <!-- Configuración para tareas rechazadas -->
+    <config evaluator="task-type" condition="wf:rejectedTask">
+        <forms>
+            <form>
+                <appearance>
+                    <field id="bpm:status">
+                        <control template="/org/alfresco/components/form/controls/selectone.ftl">
+                            <control-param name="options">Not Yet Started|Aún no iniciado,In Progress|En curso,Completed|Completado,Cancelled|Cancelado</control-param>
+                        </control>
+                    </field>
+                </appearance>
+            </form>
+        </forms>
+    </config>
+
     <!-- Configuración para acción de QR con enlace de descarga -->
     <config evaluator="string-compare" condition="DocLibActions">
         <actions>
