@@ -1,0 +1,9 @@
+<webscript>
+    <shortname>Formulario Simple</shortname>
+    <description>Formulario personalizado de 3 campos</description>
+    <url>/components/form/formulario-simple</url>
+    <url>/site/{site}/components/form/formulario-simple</url>  <!-- ✅ Agregar esta línea -->
+    <family>Share</family>
+    <format default="html">argument</format>
+    <authentication>user</authentication>
+</webscript>

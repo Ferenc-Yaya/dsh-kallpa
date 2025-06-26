@@ -159,4 +159,15 @@
             </actionGroup>
         </actionGroups>
     </config>
+    <config evaluator="string-compare" condition="DocumentLibrary">
+        <create-content>
+            <content id="formulario-simple"
+                     label="Formulario"
+                     type="pagelink"
+                     index="40"
+                     icon="document-new">
+                <param name="page">components/form/formulario-simple</param>  <!-- ✅ Sin barra inicial -->
+            </content>
+        </create-content>
+    </config>
 </alfresco-config>
