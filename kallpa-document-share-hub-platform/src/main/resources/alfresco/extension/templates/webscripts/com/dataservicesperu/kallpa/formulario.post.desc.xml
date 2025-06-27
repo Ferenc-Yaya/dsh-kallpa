@@ -1,8 +1,9 @@
 <webscript>
-    <shortname>Formulario Simple</shortname>
-    <description>Procesa y elimina archivos del formulario</description>
+    <shortname>Formulario API POST</shortname>
+    <description>API POST para procesar formulario</description>
     <url>/formulario</url>
     <authentication>user</authentication>
     <transaction>required</transaction>
     <format default="json">argument</format>
+    <family>Kallpa</family>
 </webscript>

@@ -16,10 +16,10 @@ try {
       }
    }
 
-   // Intentar cargar datos del repository
+   // Intentar cargar datos del repository - CAMBIO AQUÍ
    try {
       var connector = remote.connect("alfresco");
-      var serviceUrl = "/formulario/cargar";
+      var serviceUrl = "/formulario/cargar";  // Esta URL ahora apunta a tu WebScript Java
 
       if (siteId) {
          serviceUrl += "?site=" + encodeURIComponent(siteId);

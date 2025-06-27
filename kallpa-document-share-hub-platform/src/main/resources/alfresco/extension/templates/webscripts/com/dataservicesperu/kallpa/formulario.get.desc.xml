@@ -1,0 +1,9 @@
+<webscript>
+    <shortname>Formulario API GET</shortname>
+    <description>API GET para cargar datos del formulario</description>
+    <url>/formulario/cargar</url>
+    <authentication>user</authentication>
+    <transaction>required</transaction>
+    <format default="json">argument</format>
+    <family>Kallpa</family>
+</webscript>
