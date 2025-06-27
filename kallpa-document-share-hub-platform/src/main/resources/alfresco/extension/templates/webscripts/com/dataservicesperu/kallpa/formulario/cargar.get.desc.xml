@@ -1,0 +1,7 @@
+<webscript>
+    <shortname>Cargar Datos Formulario</shortname>
+    <description>Carga datos existentes del formulario JSON</description>
+    <url>/formulario/cargar</url>
+    <authentication>user</authentication>
+    <format default="json">argument</format>
+</webscript>
