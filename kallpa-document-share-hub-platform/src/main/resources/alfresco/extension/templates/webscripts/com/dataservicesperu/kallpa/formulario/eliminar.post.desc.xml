@@ -1,8 +1,0 @@
-<webscript>
-    <shortname>Eliminar Archivo Formulario</shortname>
-    <description>Elimina archivo JSON del formulario</description>
-    <url>/formulario/eliminar</url>
-    <authentication>user</authentication>
-    <transaction>required</transaction>
-    <format default="json">argument</format>
-</webscript>
