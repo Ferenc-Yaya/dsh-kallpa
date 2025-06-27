@@ -99,15 +99,20 @@
             campo3: campo3
          };
 
-         fetch('/share/proxy/alfresco/service/formulario/procesar', {
+         // RUTA CORREGIDA - Usar proxy de Share para llegar al Repository
+         fetch('/share/proxy/alfresco/formulario/procesar', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
             },
             body: JSON.stringify(datos)
          })
-         .then(response => response.json())
+         .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+         })
          .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
                document.getElementById('message').innerHTML = '<div style="color: green; padding: 10px;">✅ Archivo creado: ' + data.filename + '</div>';
                // Limpiar formulario
@@ -121,6 +126,7 @@
             }
          })
          .catch(error => {
+            console.error('Error completo:', error);
             document.getElementById('message').innerHTML = '<div style="color: red; padding: 10px;">❌ Error de conexión: ' + error.message + '</div>';
          });
       }
