@@ -11,26 +11,25 @@
     </bean>
 
     <!-- Servicio de Formulario -->
-    <bean id="formularioService" class="com.dataservicesperu.kallpa.service.FormularioService">
+    <bean id="empleadoService" class="com.dataservicesperu.kallpa.service.EmpleadoService">
         <property name="nodeService" ref="NodeService" />
         <property name="searchService" ref="SearchService" />
         <property name="siteService" ref="SiteService" />
         <property name="contentService" ref="ContentService" />
     </bean>
 
-    <!-- WebScript GET -->
+    <!-- Cambiar las referencias en los webscripts -->
     <bean id="webscript.com.dataservicesperu.kallpa.formulario.get"
-          class="com.dataservicesperu.kallpa.webscripts.FormularioWebScript"
+          class="com.dataservicesperu.kallpa.webscripts.EmpleadoWebScript"
           parent="webscript">
-        <property name="formularioService" ref="formularioService" />
+        <property name="empleadoService" ref="empleadoService" />
         <property name="authenticationService" ref="AuthenticationService" />
     </bean>
 
-    <!-- WebScript POST -->
     <bean id="webscript.com.dataservicesperu.kallpa.formulario.post"
-          class="com.dataservicesperu.kallpa.webscripts.FormularioWebScript"
+          class="com.dataservicesperu.kallpa.webscripts.EmpleadoWebScript"
           parent="webscript">
-        <property name="formularioService" ref="formularioService" />
+        <property name="empleadoService" ref="empleadoService" />
         <property name="authenticationService" ref="AuthenticationService" />
     </bean>
 </beans>

@@ -162,7 +162,7 @@
     <config evaluator="string-compare" condition="DocumentLibrary">
         <create-content>
             <content id="formulario-simple"
-                     label="Formulario"
+                     label="Empleados"
                      type="pagelink"
                      index="40"
                      icon="document-new">

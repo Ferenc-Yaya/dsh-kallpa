@@ -1,22 +1,24 @@
 package com.dataservicesperu.kallpa.webscripts;
 
-import com.dataservicesperu.kallpa.model.FormularioData;
-import com.dataservicesperu.kallpa.service.FormularioService;
+import com.dataservicesperu.kallpa.model.EmpleadoData;
+import com.dataservicesperu.kallpa.service.EmpleadoService;
 import org.springframework.extensions.webscripts.*;
 import org.alfresco.service.cmr.security.AuthenticationService;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FormularioWebScript extends AbstractWebScript {
 
-    private FormularioService formularioService;
+    private EmpleadoService empleadoService;
     private AuthenticationService authenticationService;
 
-    public void setFormularioService(FormularioService formularioService) {
-        this.formularioService = formularioService;
+    public void setEmpleadoService(EmpleadoService empleadoService) {
+        this.empleadoService = empleadoService;
     }
 
     public void setAuthenticationService(AuthenticationService authenticationService) {
@@ -43,6 +45,7 @@ public class FormularioWebScript extends AbstractWebScript {
             response.put("success", false);
             response.put("message", "Error: " + e.getMessage());
             res.setStatus(500);
+            e.printStackTrace(); // Para debug
         }
 
         res.setContentType("application/json");
@@ -53,17 +56,33 @@ public class FormularioWebScript extends AbstractWebScript {
     }
 
     private void handleGet(String siteId, Map<String, Object> response) {
-        FormularioData datos = formularioService.cargarDatos(siteId);
+        List<EmpleadoData> empleados = empleadoService.cargarDatos(siteId);
 
-        response.put("tieneArchivo", datos.getNodeRef() != null);
+        response.put("tieneArchivo", !empleados.isEmpty());
         response.put("siteId", siteId != null ? siteId : "");
-        response.put("nombreArchivo", datos.getNombreArchivo() != null ? datos.getNombreArchivo() : "");
-        response.put("nodeRefArchivo", datos.getNodeRef() != null ? datos.getNodeRef() : "");
-        response.put("campo1", datos.getCampo1() != null ? datos.getCampo1() : "");
-        response.put("campo2", datos.getCampo2() != null ? datos.getCampo2() : "");
-        response.put("campo3", datos.getCampo3() != null ? datos.getCampo3() : "");
-        response.put("fechaCreacion", datos.getFechaCreacion() != null ? datos.getFechaCreacion().toString() : "");
-        response.put("fechaModificacion", datos.getFechaModificacion() != null ? datos.getFechaModificacion().toString() : "");
+        response.put("totalEmpleados", empleados.size());
+
+        JSONArray empleadosArray = new JSONArray();
+        String nodeRefArchivo = "";
+        String nombreArchivo = "";
+
+        if (!empleados.isEmpty()) {
+            nodeRefArchivo = empleados.get(0).getNodeRef() != null ? empleados.get(0).getNodeRef() : "";
+            nombreArchivo = empleados.get(0).getNombreArchivo() != null ? empleados.get(0).getNombreArchivo() : "";
+
+            for (EmpleadoData empleado : empleados) {
+                JSONObject empJson = new JSONObject();
+                empJson.put("numero", empleado.getNumero() != null ? empleado.getNumero() : "");
+                empJson.put("nombreApellidos", empleado.getNombreApellidos() != null ? empleado.getNombreApellidos() : "");
+                empJson.put("dni", empleado.getDni() != null ? empleado.getDni() : "");
+                empJson.put("puestoTrabajo", empleado.getPuestoTrabajo() != null ? empleado.getPuestoTrabajo() : "");
+                empleadosArray.put(empJson);
+            }
+        }
+
+        response.put("empleados", empleadosArray.toList());
+        response.put("nodeRefArchivo", nodeRefArchivo);
+        response.put("nombreArchivo", nombreArchivo);
     }
 
     private void handlePost(WebScriptRequest req, String siteId, String usuario, Map<String, Object> response) throws IOException {
@@ -74,7 +93,7 @@ public class FormularioWebScript extends AbstractWebScript {
 
         if ("eliminar".equals(operacion)) {
             String nodeRef = requestData.optString("nodeRefArchivo");
-            boolean eliminado = formularioService.eliminarArchivo(nodeRef);
+            boolean eliminado = empleadoService.eliminarArchivo(nodeRef);
 
             if (eliminado) {
                 response.put("message", "Archivo eliminado exitosamente");
@@ -83,17 +102,19 @@ public class FormularioWebScript extends AbstractWebScript {
                 response.put("message", "Error al eliminar el archivo");
             }
         } else {
-            FormularioData datos = new FormularioData();
-            datos.setCampo1(requestData.optString("campo1"));
-            datos.setCampo2(requestData.optString("campo2"));
-            datos.setCampo3(requestData.optString("campo3"));
+            EmpleadoData datos = new EmpleadoData();
+            datos.setNumero(requestData.optString("numero"));
+            datos.setNombreApellidos(requestData.optString("nombreApellidos"));
+            datos.setDni(requestData.optString("dni"));
+            datos.setPuestoTrabajo(requestData.optString("puestoTrabajo"));
 
-            FormularioData resultado = formularioService.guardarDatos(datos, siteId, usuario);
+            EmpleadoData resultado = empleadoService.guardarDatos(datos, siteId, usuario);
 
-            response.put("message", "Archivo guardado exitosamente");
+            response.put("message", "Empleado agregado exitosamente");
             response.put("filename", resultado.getNombreArchivo());
             response.put("nodeRef", resultado.getNodeRef());
             response.put("siteId", siteId);
+            response.put("numeroAsignado", resultado.getNumero());
         }
     }
 }
