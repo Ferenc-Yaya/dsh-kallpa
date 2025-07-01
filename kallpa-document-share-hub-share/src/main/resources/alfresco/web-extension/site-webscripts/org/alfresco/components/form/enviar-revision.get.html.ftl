@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <title>Enviar a Revisión - DSH</title>
+   <title>ENVIAR A REVISIÓN - DSH</title>
    <meta charset="utf-8">
    <style>
       body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
@@ -53,28 +53,52 @@
          color: #155724;
       }
       .btn {
-         padding: 12px 30px;
-         margin: 0 10px;
+         padding: 12px 25px;
+         margin: 0 8px;
          border: none;
-         border-radius: 4px;
+         border-radius: 6px;
          cursor: pointer;
          font-size: 14px;
+         font-weight: 500;
+         min-width: 140px;
+         height: 44px;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         text-decoration: none;
+         transition: all 0.2s ease;
       }
-      .btn-primary { background: #667eea; color: white; }
-      .btn-secondary { background: #6c757d; color: white; }
+      .btn-primary {
+         background: #667eea;
+         color: white;
+      }
+      .btn-primary:hover {
+         background: #5a67d8;
+         transform: translateY(-1px);
+         box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      }
+      .btn-secondary {
+         background: #6c757d;
+         color: white;
+      }
+      .btn-secondary:hover {
+         background: #5a6268;
+         transform: translateY(-1px);
+         box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+      }
    </style>
 </head>
 <body>
    <div class="form-container">
       <div class="form-header">
-         <h1>📤 Enviar a Revisión</h1>
+         <h1>📤 ENVIAR A REVISIÓN</h1>
          <p>Generar archivo de confirmación</p>
       </div>
 
       <div class="info-box">
          <h3>ℹ️ Proceso de Revisión de Documentos</h3>
          <ul>
-            <li><strong>Al enviar documentos a revisión:</strong> El supervisor DSH procederá a <span class="highlight">proteger los documentos subidos</span> para garantizar la integridad durante el proceso de evaluación.</li>
+            <li><strong>Al enviar los documentos:</strong> El supervisor DSH procederá a <span class="highlight">proteger los documentos subidos</span> para garantizar la integridad durante el proceso de evaluación.</li>
             <li><strong>Seguimiento del proceso:</strong> Recibirá actualizaciones constantes mediante <span class="highlight">notificaciones por correo electrónico</span> y podrá revisar el progreso a través de los <span class="highlight">comentarios del archivo de seguimiento</span> que se generará automáticamente.</li>
             <li><strong>Resultado exitoso:</strong> Una vez que todos los documentos hayan sido aprobados satisfactoriamente, recibirá el documento oficial <span class="highlight">"INFORME DE HABILITACIÓN"</span> como certificación del cumplimiento de todos los requisitos.</li>
          </ul>
@@ -84,7 +108,7 @@
 
       <div style="text-align: center; margin-top: 30px;">
          <button type="button" onclick="enviarRevision()" class="btn btn-primary">
-            📤 Enviar a Revisión
+            📤 Enviar
          </button>
          <button type="button" onclick="window.history.back()" class="btn btn-secondary">
             ❌ Cancelar

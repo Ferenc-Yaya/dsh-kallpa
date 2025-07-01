@@ -27,29 +27,37 @@ public class DocumentSubmissionService {
         this.serviceRegistry = serviceRegistry;
     }
 
-    private static final String FILENAME = "ARCHIVOS SUBIDOS.pdf";
-
     public DocumentSubmissionResult processSubmission(String siteId, String username) {
         try {
-            // Determinar carpeta destino
+            // Determinar carpeta destino y obtener info del sitio
+            SiteInfo siteInfo = null;
             NodeRef targetFolder = getTargetFolder(siteId);
+
+            // Obtener información del sitio si existe
+            if (siteId != null && !siteId.trim().isEmpty()) {
+                SiteService siteService = serviceRegistry.getSiteService();
+                siteInfo = siteService.getSite(siteId);
+            }
+
+            // Generar nombre del archivo
+            String filename = generateFilename(siteInfo);
 
             // Verificar si ya existe el archivo
             NodeRef existingFile = serviceRegistry.getNodeService()
-                    .getChildByName(targetFolder, ContentModel.ASSOC_CONTAINS, FILENAME);
+                    .getChildByName(targetFolder, ContentModel.ASSOC_CONTAINS, filename);
 
             if (existingFile != null) {
                 return new DocumentSubmissionResult(true,
                         "El archivo de confirmación ya fue creado anteriormente",
-                        FILENAME, existingFile.toString());
+                        filename, existingFile.toString());
             }
 
             // Crear el PDF
-            byte[] pdfContent = createConfirmationPdf(username);
+            byte[] pdfContent = createConfirmationPdf(username, siteInfo);
 
             // Crear el archivo en Alfresco
             NodeRef pdfFile = serviceRegistry.getFileFolderService()
-                    .create(targetFolder, FILENAME, ContentModel.TYPE_CONTENT).getNodeRef();
+                    .create(targetFolder, filename, ContentModel.TYPE_CONTENT).getNodeRef();
 
             // Escribir contenido
             ContentWriter writer = serviceRegistry.getContentService()
@@ -57,16 +65,30 @@ public class DocumentSubmissionService {
             writer.setMimetype("application/pdf");
             writer.putContent(new ByteArrayInputStream(pdfContent));
 
-            logger.info("Archivo PDF de confirmación creado exitosamente: " + FILENAME);
+            logger.info("Archivo PDF de confirmación creado exitosamente: " + filename);
 
             return new DocumentSubmissionResult(true,
                     "Archivo de confirmación enviado exitosamente",
-                    FILENAME, pdfFile.toString());
+                    filename, pdfFile.toString());
 
         } catch (Exception e) {
             logger.error("Error al procesar envío de documentos", e);
             return new DocumentSubmissionResult(false,
                     "Error interno: " + e.getMessage(), null, null);
+        }
+    }
+
+    private String generateFilename(SiteInfo siteInfo) {
+        if (siteInfo != null) {
+            String siteName = siteInfo.getTitle();
+            if (siteName == null || siteName.trim().isEmpty()) {
+                siteName = siteInfo.getShortName();
+            }
+            // Limpiar caracteres especiales del nombre del sitio
+            siteName = siteName.replaceAll("[^a-zA-Z0-9\\s-_]", "").trim();
+            return "ARCHIVOS SUBIDOS - " + siteName + ".pdf";
+        } else {
+            return "ARCHIVOS SUBIDOS.pdf";
         }
     }
 
@@ -87,7 +109,7 @@ public class DocumentSubmissionService {
         }
     }
 
-    private byte[] createConfirmationPdf(String username) throws Exception {
+    private byte[] createConfirmationPdf(String username, SiteInfo siteInfo) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, baos);
@@ -114,12 +136,22 @@ public class DocumentSubmissionService {
 
         document.add(new Paragraph("Fecha: " + currentDate, normalFont));
         document.add(new Paragraph("Usuario: " + username, normalFont));
+
+        // Agregar información del sitio si existe
+        if (siteInfo != null) {
+            String siteName = siteInfo.getTitle();
+            if (siteName == null || siteName.trim().isEmpty()) {
+                siteName = siteInfo.getShortName();
+            }
+            document.add(new Paragraph("Sitio Colaborativo: " + siteName, normalFont));
+        }
+
         document.add(new Paragraph(" ", normalFont)); // Espacio
 
         // Mensaje de confirmación
         Font confirmFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLUE);
         Paragraph confirmation = new Paragraph(
-                "Este archivo confirma que se han enviado documentos a los supervisores EHS y administradores de contrato.", confirmFont);
+                "Este archivo confirma que se han enviado los documentos.", confirmFont);
         confirmation.setSpacingBefore(20);
         document.add(confirmation);
 

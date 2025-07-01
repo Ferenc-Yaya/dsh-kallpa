@@ -163,7 +163,7 @@
     <config evaluator="string-compare" condition="DocumentLibrary">
         <create-content>
             <content id="enviar-revision"
-                     label="Enviar a Revisión"
+                     label="Enviar a revisión"
                      type="pagelink"
                      index="41"
                      icon="document-edit">
