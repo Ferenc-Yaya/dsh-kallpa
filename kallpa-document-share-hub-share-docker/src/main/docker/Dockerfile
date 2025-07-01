@@ -12,5 +12,8 @@ RUN java -jar $TOMCAT_DIR/alfresco-mmt/alfresco-mmt*.jar install \
 
 COPY share-config-custom.xml $TOMCAT_DIR/shared/classes/alfresco/web-extension
 
+# Agregar variable de entorno para forzar español
+ENV JAVA_OPTS="$JAVA_OPTS -Duser.language=es -Duser.country=ES"
+
 COPY log4j2.properties $TOMCAT_DIR/webapps/share/WEB-INF/classes
 COPY hotswap-agent.properties $TOMCAT_DIR/webapps/share/WEB-INF/classes
