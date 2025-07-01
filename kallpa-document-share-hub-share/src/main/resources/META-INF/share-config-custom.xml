@@ -160,8 +160,11 @@
         </actionGroups>
     </config>
 
-    <config evaluator="string-compare" condition="DocumentLibrary">
+    <config evaluator="string-compare" condition="DocumentLibrary" replace="true">
         <create-content>
+            <content id="folder" label="create-content.folder" icon="folder" index="5" type="javascript">
+                <param name="function">onNewFolder</param>
+            </content>
             <content id="enviar-revision"
                      label="Enviar a revisión"
                      type="pagelink"
