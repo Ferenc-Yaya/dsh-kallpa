@@ -1,0 +1,9 @@
+<webscript>
+    <shortname>Enviar a Revisión</shortname>
+    <description>Formulario para enviar documentos a revisión</description>
+    <url>/components/form/enviar-revision</url>
+    <url>/site/{site}/components/form/enviar-revision</url>
+    <family>Share</family>
+    <format default="html">argument</format>
+    <authentication>user</authentication>
+</webscript>

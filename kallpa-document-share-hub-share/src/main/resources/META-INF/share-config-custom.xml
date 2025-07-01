@@ -159,4 +159,16 @@
             </actionGroup>
         </actionGroups>
     </config>
+
+    <config evaluator="string-compare" condition="DocumentLibrary">
+        <create-content>
+            <content id="enviar-revision"
+                     label="Enviar a Revisión"
+                     type="pagelink"
+                     index="41"
+                     icon="document-edit">
+                <param name="page">components/form/enviar-revision</param>
+            </content>
+        </create-content>
+    </config>
 </alfresco-config>
