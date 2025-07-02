@@ -37,12 +37,19 @@
         </flags>
     </config>
 
-    <!--
-        Disable CSRF completely for now
-        It seems Share has issues on 4.x with the embedded tomcat and CSRFPolicy
-        -->
     <config evaluator="string-compare" condition="CSRFPolicy" replace="true">
-        <filter/>
+        <filter>
+            <rule>
+                <request>
+                    <method>POST</method>
+                    <path>/proxy/alfresco/.*</path>
+                </request>
+            </rule>
+        </filter>
+        <client>
+            <cookie>Alfresco-CSRFToken</cookie>
+            <header>Alfresco-CSRFToken</header>
+        </client>
     </config>
 
 
