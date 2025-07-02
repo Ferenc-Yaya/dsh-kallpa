@@ -137,21 +137,63 @@
             url += '?site=' + encodeURIComponent(siteId);
          }
 
+         // DEBUG: Log información
+         console.log('🔍 URL actual:', currentUrl);
+         console.log('🔍 Site ID:', siteId);
+         console.log('🔍 URL de solicitud:', url);
+         console.log('🔍 Datos a enviar:', requestData);
+
          fetch(url, {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
-               'Referer': window.location.href  // Enviar la URL actual como referencia
+               'Referer': window.location.href
             },
             body: JSON.stringify(requestData)
          })
-         .then(response => response.json())
+         .then(response => {
+            console.log('🔍 Response status:', response.status);
+            console.log('🔍 Response URL:', response.url);
+            console.log('🔍 Response headers:', Array.from(response.headers.entries()));
+
+            // Verificar si la respuesta es OK
+            if (!response.ok) {
+               throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+            }
+
+            // Verificar Content-Type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+               return response.text().then(text => {
+                  console.error('🚨 Respuesta no es JSON:', text);
+                  throw new Error('Respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
+               });
+            }
+
+            return response.json();
+         })
          .then(data => {
+            console.log('✅ Datos recibidos:', data);
+
+            // Mostrar información sobre la configuración del servidor
+            if (data.baseUrl) {
+               console.log('🌐 Base URL del servidor:', data.baseUrl);
+               console.log('🏠 Entorno detectado:', data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN');
+
+               // Guardar baseUrl para uso futuro si es necesario
+               window.alfrescoBaseUrl = data.baseUrl;
+            }
+
             if (data.success) {
                var locationText = data.location ? ' en ' + data.location : '';
-               document.getElementById('message').innerHTML = '<div style="color: green; padding: 10px;">✅ ' + data.message + locationText + '</div>';
-               setTimeout(() => {
-                  // Regresar a la biblioteca del sitio actual
+
+               // Mensaje mejorado que incluye información del entorno
+               var environmentInfo = data.baseUrl ? '<br><small>Entorno: ' + data.baseUrl + '</small>' : '';
+
+               document.getElementById('message').innerHTML =
+                  '<div style="color: green; padding: 10px;">✅ ' + data.message + locationText + environmentInfo + '</div>';
+
+               setTimeout(function() {
                   if (siteId) {
                      window.location.href = '/share/page/site/' + siteId + '/documentlibrary';
                   } else {
@@ -159,11 +201,47 @@
                   }
                }, 2000);
             } else {
-               document.getElementById('message').innerHTML = '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + '</div>';
+               // Mostrar error con información adicional del servidor
+               var environmentInfo = data.baseUrl ? '<br><small>Servidor: ' + data.baseUrl + '</small>' : '';
+
+               document.getElementById('message').innerHTML =
+                  '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + environmentInfo + '</div>';
             }
          })
          .catch(error => {
-            document.getElementById('message').innerHTML = '<div style="color: red; padding: 10px;">❌ No se pudo procesar la solicitud: ' + error.message + '</div>';
+            console.error('🚨 Error completo:', error);
+            document.getElementById('message').innerHTML =
+               '<div style="color: red; padding: 10px;">❌ Error: ' + error.message + '<br><small>Revisa la consola para más detalles</small></div>';
+         });
+      }
+
+      // FUNCIÓN ADICIONAL: Para usar la baseUrl en otras partes si es necesario
+      function getAlfrescoBaseUrl() {
+         return window.alfrescoBaseUrl || window.location.origin;
+      }
+
+      // FUNCIÓN DE DEBUG: Para probar la configuración
+      function testServerConfig() {
+         console.log('🧪 Probando configuración del servidor...');
+
+         fetch('/share/proxy/alfresco/revision/procesar', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({test: true})
+         })
+         .then(response => response.json())
+         .then(data => {
+            console.log('🔧 Configuración del servidor:', {
+               baseUrl: data.baseUrl,
+               environment: data.baseUrl && data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN',
+               success: data.success,
+               message: data.message
+            });
+         })
+         .catch(error => {
+            console.error('❌ Error al probar configuración:', error);
          });
       }
    </script>
