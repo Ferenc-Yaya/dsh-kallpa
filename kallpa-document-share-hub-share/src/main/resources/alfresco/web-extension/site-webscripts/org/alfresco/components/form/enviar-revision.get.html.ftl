@@ -193,6 +193,11 @@
             console.log('⚠️ Enviando request SIN token CSRF');
          }
 
+         // DEBUG: Log información
+         console.log('🔍 URL actual:', currentUrl);
+         console.log('🔍 Site ID:', siteId);
+         console.log('🔍 URL de solicitud:', url);
+         console.log('🔍 Datos a enviar:', requestData);
          console.log('📡 Enviando request:', { url: url, headers: headers });
 
          fetch(url, {
@@ -201,7 +206,9 @@
             body: JSON.stringify(requestData)
          })
          .then(function(response) {
-            console.log('📡 Response status:', response.status);
+            console.log('🔍 Response status:', response.status);
+            console.log('🔍 Response URL:', response.url);
+            console.log('🔍 Response headers:', Array.from(response.headers.entries()));
 
             if (!response.ok) {
                if (response.status === 403) {
@@ -209,14 +216,34 @@
                }
                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
             }
+
+            // Verificar Content-Type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+               return response.text().then(text => {
+                  console.error('🚨 Respuesta no es JSON:', text);
+                  throw new Error('Respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
+               });
+            }
+
             return response.json();
          })
          .then(function(data) {
-            console.log('✅ Respuesta exitosa:', data);
+            console.log('✅ Datos recibidos:', data);
+
+            // Mostrar información sobre la configuración del servidor
+            if (data.baseUrl) {
+               console.log('🌐 Base URL del servidor:', data.baseUrl);
+               console.log('🏠 Entorno detectado:', data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN');
+               window.alfrescoBaseUrl = data.baseUrl;
+            }
+
             if (data.success) {
                var locationText = data.filename ? ' (Archivo: ' + data.filename + ')' : '';
+               var environmentInfo = data.baseUrl ? '<br><small>Entorno: ' + data.baseUrl + '</small>' : '';
+
                document.getElementById('message').innerHTML =
-                  '<div style="color: green; padding: 10px;">✅ Archivo de confirmación enviado exitosamente' + locationText + '</div>';
+                  '<div style="color: green; padding: 10px;">✅ Archivo de confirmación enviado exitosamente' + locationText + environmentInfo + '</div>';
 
                setTimeout(function() {
                   if (siteId) {
@@ -226,8 +253,9 @@
                   }
                }, 2000);
             } else {
+               var environmentInfo = data.baseUrl ? '<br><small>Servidor: ' + data.baseUrl + '</small>' : '';
                document.getElementById('message').innerHTML =
-                  '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + '</div>';
+                  '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + environmentInfo + '</div>';
             }
          })
          .catch(function(error) {
@@ -242,8 +270,38 @@
                   '<div style="color: red; padding: 10px;"><strong>Error 403:</strong> Acceso denegado por CSRF.</div>';
             } else {
                document.getElementById('message').innerHTML =
-                  '<div style="color: red; padding: 10px;">Error: ' + error.message + '</div>';
+                  '<div style="color: red; padding: 10px;">❌ Error: ' + error.message + '<br><small>Revisa la consola para más detalles</small></div>';
             }
+         });
+      }
+
+      // FUNCIÓN ADICIONAL: Para usar la baseUrl en otras partes si es necesario
+      function getAlfrescoBaseUrl() {
+         return window.alfrescoBaseUrl || window.location.origin;
+      }
+
+      // FUNCIÓN DE DEBUG: Para probar la configuración
+      function testServerConfig() {
+         console.log('🧪 Probando configuración del servidor...');
+
+         fetch('/share/proxy/alfresco/revision/procesar', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({test: true})
+         })
+         .then(response => response.json())
+         .then(data => {
+            console.log('🔧 Configuración del servidor:', {
+               baseUrl: data.baseUrl,
+               environment: data.baseUrl && data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN',
+               success: data.success,
+               message: data.message
+            });
+         })
+         .catch(error => {
+            console.error('❌ Error al probar configuración:', error);
          });
       }
 

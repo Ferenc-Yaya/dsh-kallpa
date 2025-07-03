@@ -6,6 +6,11 @@ import org.alfresco.model.ContentModel;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.cmr.repository.StoreRef;
+import org.alfresco.service.cmr.repository.ChildAssociationRef;
+import org.alfresco.service.cmr.search.SearchParameters;
+import org.alfresco.service.cmr.search.ResultSet;
+import org.alfresco.service.cmr.search.SearchService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.cmr.site.SiteInfo;
 import org.alfresco.service.cmr.site.SiteService;
@@ -16,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class DocumentSubmissionService {
 
@@ -93,19 +99,78 @@ public class DocumentSubmissionService {
     }
 
     private NodeRef getTargetFolder(String siteId) {
-        if (siteId != null && !siteId.trim().isEmpty()) {
-            SiteService siteService = serviceRegistry.getSiteService();
-            SiteInfo site = siteService.getSite(siteId);
-            if (site != null) {
-                return siteService.getContainer(siteId, "documentLibrary");
+        try {
+            if (siteId != null && !siteId.trim().isEmpty()) {
+                logger.info("Obteniendo carpeta para sitio: " + siteId);
+
+                // Método alternativo: usar SearchService para encontrar documentLibrary
+                SearchParameters searchParams = new SearchParameters();
+                searchParams.addStore(StoreRef.STORE_REF_WORKSPACE_SPACESSTORE);
+                searchParams.setLanguage(SearchService.LANGUAGE_FTS_ALFRESCO);
+                searchParams.setQuery("PATH:\"/app:company_home/st:sites/cm:" + siteId + "/cm:documentLibrary\"");
+                searchParams.setLimit(1);
+
+                ResultSet resultSet = serviceRegistry.getSearchService().query(searchParams);
+                try {
+                    if (resultSet.length() > 0) {
+                        NodeRef documentLibrary = resultSet.getNodeRef(0);
+                        logger.info("documentLibrary encontrada usando búsqueda: " + documentLibrary);
+                        return documentLibrary;
+                    }
+                } finally {
+                    resultSet.close();
+                }
+
+                // Si no se encuentra con búsqueda, intentar método tradicional
+                SiteService siteService = serviceRegistry.getSiteService();
+                SiteInfo site = siteService.getSite(siteId);
+                if (site == null) {
+                    throw new RuntimeException("El sitio '" + siteId + "' no existe.");
+                }
+
+                // Usar el nodeRef del sitio y buscar documentLibrary como hijo
+                NodeRef siteNodeRef = site.getNodeRef();
+                List<ChildAssociationRef> children = serviceRegistry.getNodeService()
+                        .getChildAssocs(siteNodeRef);
+
+                for (ChildAssociationRef child : children) {
+                    String childName = (String) serviceRegistry.getNodeService()
+                            .getProperty(child.getChildRef(), ContentModel.PROP_NAME);
+                    if ("documentLibrary".equals(childName)) {
+                        logger.info("documentLibrary encontrada como hijo: " + child.getChildRef());
+                        return child.getChildRef();
+                    }
+                }
+
+                throw new RuntimeException("No se puede encontrar documentLibrary para el sitio: " + siteId);
+
+            } else {
+                logger.info("Usando carpeta Company Home para usuario: " +
+                        serviceRegistry.getAuthenticationService().getCurrentUserName());
+
+                // En lugar de carpeta personal, usar Company Home que siempre existe
+                SearchParameters searchParams = new SearchParameters();
+                searchParams.addStore(StoreRef.STORE_REF_WORKSPACE_SPACESSTORE);
+                searchParams.setLanguage(SearchService.LANGUAGE_FTS_ALFRESCO);
+                searchParams.setQuery("PATH:\"/app:company_home\"");
+                searchParams.setLimit(1);
+
+                ResultSet resultSet = serviceRegistry.getSearchService().query(searchParams);
+                try {
+                    if (resultSet.length() > 0) {
+                        NodeRef companyHome = resultSet.getNodeRef(0);
+                        logger.info("Company Home encontrada: " + companyHome);
+                        return companyHome;
+                    }
+                } finally {
+                    resultSet.close();
+                }
+
+                throw new RuntimeException("No se puede encontrar Company Home");
             }
-            throw new RuntimeException("El sitio '" + siteId + "' no existe.");
-        } else {
-            // Carpeta personal del usuario
-            PersonService personService = serviceRegistry.getPersonService();
-            NodeRef person = personService.getPerson(serviceRegistry.getAuthenticationService().getCurrentUserName());
-            return serviceRegistry.getNodeService()
-                    .getChildByName(person, ContentModel.ASSOC_CONTAINS, "Documents");
+        } catch (Exception e) {
+            logger.error("Error en getTargetFolder para sitio: " + siteId, e);
+            throw new RuntimeException("Error obteniendo carpeta destino: " + e.getMessage());
         }
     }
 
