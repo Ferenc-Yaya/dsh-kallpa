@@ -20,12 +20,15 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+
 public class PublicDownloadWebScript extends AbstractWebScript {
+
     private static Log logger = LogFactory.getLog(PublicDownloadWebScript.class);
-    private ServiceRegistry serviceRegistry;
+
+    private final ServiceRegistry serviceRegistry;
     private boolean guestAccess = true;
 
-    public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    public PublicDownloadWebScript(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
     }
 
@@ -35,9 +38,6 @@ public class PublicDownloadWebScript extends AbstractWebScript {
 
     @Override
     public void execute(WebScriptRequest req, WebScriptResponse res) throws IOException {
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
-
         try {
             AuthenticationUtil.runAsSystem((AuthenticationUtil.RunAsWork<Void>) () -> {
                 executeDownload(req, res);

@@ -1,6 +1,5 @@
 package com.dataservicesperu.kallpa.actions;
 
-import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.BarcodeQRCode;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -12,16 +11,13 @@ import org.alfresco.repo.action.executer.ActionExecuterAbstractBase;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.action.Action;
 import org.alfresco.service.cmr.action.ParameterDefinition;
-import org.alfresco.service.cmr.repository.ContentIOException;
 import org.alfresco.service.cmr.repository.ContentReader;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.namespace.QName;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -32,18 +28,17 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
 
     private static Log logger = LogFactory.getLog(CreateQrDownloadActionExecuter.class);
 
-    private ServiceRegistry serviceRegistry;
+    private final ServiceRegistry serviceRegistry;
+    private final String baseUrl;
 
-    @Value("${alfresco.base.url}")
-    private String baseUrl;
-
-    public void setServiceRegistry(ServiceRegistry serviceRegistry) {
+    public CreateQrDownloadActionExecuter(ServiceRegistry serviceRegistry, String baseUrl) {
         this.serviceRegistry = serviceRegistry;
+        this.baseUrl = baseUrl;
     }
 
     @Override
     protected void addParameterDefinitions(List<ParameterDefinition> paramList) {
-
+        // No parameters needed
     }
 
     @Override
@@ -64,16 +59,13 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
             }
 
             String nodeId = actionedUponNodeRef.getId();
-            String baseUrl = getBaseUrl();
-
             String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
 
             String downloadUrl = String.format("%s/alfresco/service/kallpa/download/workspace/SpacesStore/%s/%s",
-                    baseUrl, nodeId, encodedFileName);
+                    getBaseUrl(), nodeId, encodedFileName);
 
             logger.info("Generando QR con URL de descarga: " + downloadUrl);
 
-            // Generar QR con la URL de descarga
             ContentWriter writer = serviceRegistry.getContentService().getWriter(actionedUponNodeRef,
                     ContentModel.PROP_CONTENT, true);
             writer.setMimetype("application/pdf");
@@ -106,23 +98,12 @@ public class CreateQrDownloadActionExecuter extends ActionExecuterAbstractBase {
 
             logger.info("Código QR agregado exitosamente al documento: " + fileName);
 
-        } catch (ContentIOException e) {
-            logger.error("Error de contenido al procesar el PDF", e);
-            throw new RuntimeException("Error al procesar el contenido del PDF", e);
-        } catch (IOException e) {
-            logger.error("Error de E/S al procesar el PDF", e);
-            throw new RuntimeException("Error de E/S al procesar el PDF", e);
-        } catch (DocumentException e) {
-            logger.error("Error de documento PDF al agregar QR", e);
-            throw new RuntimeException("Error al manipular el documento PDF", e);
         } catch (Exception e) {
             logger.error("Error inesperado al generar QR", e);
             throw new RuntimeException("Error inesperado al generar QR", e);
         }
     }
-    /**
-     * Obtiene la URL base desde configuración inyectada automáticamente
-     */
+
     private String getBaseUrl() {
         if (baseUrl != null && !baseUrl.isEmpty()) {
             logger.info("Usando URL base desde properties: " + baseUrl);

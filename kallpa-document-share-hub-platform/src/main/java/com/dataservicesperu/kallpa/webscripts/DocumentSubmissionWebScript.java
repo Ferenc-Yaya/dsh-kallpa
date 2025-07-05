@@ -2,7 +2,6 @@ package com.dataservicesperu.kallpa.webscripts;
 
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService;
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService.DocumentSubmissionResult;
-import com.dataservicesperu.kallpa.interceptors.CSRFWebScriptInterceptor;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
 import org.apache.commons.logging.Log;
@@ -20,36 +19,33 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
     private static final Log logger = LogFactory.getLog(DocumentSubmissionWebScript.class);
 
-    private DocumentSubmissionService documentSubmissionService;
-    private ServiceRegistry serviceRegistry;
+    private final DocumentSubmissionService documentSubmissionService;
+    private final ServiceRegistry serviceRegistry;
+    private final String baseUrl;
 
-    @Value("${alfresco.base.url}")
-    private String baseUrl;
-
-    public void setDocumentSubmissionService(DocumentSubmissionService documentSubmissionService) {
+    public DocumentSubmissionWebScript(DocumentSubmissionService documentSubmissionService,
+                                       ServiceRegistry serviceRegistry,
+                                       @Value("${alfresco.base.url}") String baseUrl) {
         this.documentSubmissionService = documentSubmissionService;
-    }
-
-    public void setServiceRegistry(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
+        this.baseUrl = baseUrl;
     }
 
     @Override
     public void execute(WebScriptRequest req, WebScriptResponse res) throws IOException {
         try {
-            // ✅ VALIDACIÓN CSRF AUTOMÁTICA
-            if (!CSRFWebScriptInterceptor.validateCSRFToken(req, res)) {
-                logger.warn("🚫 CSRF: Request bloqueada para " + req.getURL());
-                CSRFWebScriptInterceptor.sendCSRFError(res);
-                return;
-            }
-
-            // Log información básica
-            logger.info("=== DocumentSubmissionWebScript - REQUEST VALIDADO ===");
+            logger.info("=== DocumentSubmissionWebScript - REQUEST INFO ===");
             logger.info("URL: " + req.getURL());
             logger.info("Content-Type: " + req.getHeader("Content-Type"));
+            logger.info("Referer: " + req.getHeader("Referer"));
 
-            // Ejecutar como system user
+            String csrfToken = req.getHeader("Alfresco-CSRFToken");
+            if (csrfToken != null && !csrfToken.trim().isEmpty()) {
+                logger.info("🔒 CSRF Token presente: " + csrfToken.substring(0, Math.min(8, csrfToken.length())) + "...");
+            } else {
+                logger.info("⚠️ CSRF Token: NO PRESENTE");
+            }
+
             AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
                 @Override
                 public Void doWork() throws Exception {
@@ -71,17 +67,18 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
     }
 
     private void executeAsSystem(WebScriptRequest req, WebScriptResponse res) throws IOException {
-        // El resto del código permanece igual...
         String siteId = req.getParameter("site");
         String currentUser = "admin";
 
-        logger.info("✅ CSRF validado - Procesando envío para usuario: " + currentUser +
+        logger.info("Procesando envío de documentos para usuario: " + currentUser +
                 (siteId != null ? " en sitio: " + siteId : " en carpeta personal"));
+        logger.info("Base URL configurada: " + baseUrl);
 
         DocumentSubmissionResult result = documentSubmissionService.processSubmission(siteId, currentUser);
 
         res.setContentType("application/json");
         res.setContentEncoding("UTF-8");
+
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Alfresco-CSRFToken");

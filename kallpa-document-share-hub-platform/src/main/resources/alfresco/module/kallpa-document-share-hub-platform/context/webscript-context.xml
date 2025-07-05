@@ -1,36 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
-
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
+	<!-- WebScript de descarga pública -->
 	<bean id="webscript.com.dataservicesperu.kallpa.download.public-download.get"
 		  class="com.dataservicesperu.kallpa.webscripts.PublicDownloadWebScript"
 		  parent="webscript">
-		<property name="serviceRegistry">
-			<ref bean="ServiceRegistry" />
-		</property>
+		<constructor-arg ref="ServiceRegistry" />
 		<property name="guestAccess" value="true"/>
 	</bean>
-	<!-- Nuevo WebScript para envío de documentos -->
+
+	<!-- WebScript de envío de documentos -->
 	<bean id="webscript.com.dataservicesperu.kallpa.revision.procesar.post"
 		  class="com.dataservicesperu.kallpa.webscripts.DocumentSubmissionWebScript"
 		  parent="webscript">
-		<property name="serviceRegistry">
-			<ref bean="ServiceRegistry" />
-		</property>
-		<!-- Inyectar manualmente el servicio -->
-		<property name="documentSubmissionService">
-			<ref bean="documentSubmissionService" />
-		</property>
+		<constructor-arg ref="documentSubmissionService" />
+		<constructor-arg ref="ServiceRegistry" />
+		<constructor-arg value="${alfresco.base.url}" />
 	</bean>
 
-	<!-- Definir el servicio manualmente -->
-	<bean id="documentSubmissionService"
-		  class="com.dataservicesperu.kallpa.services.DocumentSubmissionService">
-		<property name="serviceRegistry">
-			<ref bean="ServiceRegistry" />
-		</property>
-	</bean>
 </beans>

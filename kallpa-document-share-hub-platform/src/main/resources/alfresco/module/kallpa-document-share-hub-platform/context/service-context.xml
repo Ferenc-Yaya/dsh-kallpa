@@ -4,10 +4,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
+    <bean id="documentSubmissionService"
+          class="com.dataservicesperu.kallpa.services.DocumentSubmissionService">
+        <constructor-arg ref="ServiceRegistry" />
+    </bean>
+
     <bean id="createQrDownload" class="com.dataservicesperu.kallpa.actions.CreateQrDownloadActionExecuter" parent="action-executer">
-        <property name="serviceRegistry">
-            <ref bean="ServiceRegistry" />
-        </property>
+        <constructor-arg ref="ServiceRegistry" />
+        <constructor-arg value="${alfresco.base.url}" />
     </bean>
 
 </beans>
