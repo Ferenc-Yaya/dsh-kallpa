@@ -45,10 +45,23 @@
                     <path>/proxy/alfresco/.*</path>
                 </request>
             </rule>
+            <rule>
+                <request>
+                    <method>PUT</method>
+                    <path>/proxy/alfresco/.*</path>
+                </request>
+            </rule>
+            <rule>
+                <request>
+                    <method>DELETE</method>
+                    <path>/proxy/alfresco/.*</path>
+                </request>
+            </rule>
         </filter>
         <client>
             <cookie>Alfresco-CSRFToken</cookie>
             <header>Alfresco-CSRFToken</header>
+            <parameter>Alfresco-CSRFToken</parameter>
         </client>
     </config>
 

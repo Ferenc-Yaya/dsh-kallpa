@@ -111,58 +111,80 @@
    <script>
       //<![CDATA[
 
-      // === FUNCIONES CSRF DIRECTAS ===
-      function getCSRFTokenDirect() {
-         // Método 1: Buscar directamente en cookies
-         var csrfToken = getCookie('Alfresco-CSRFToken');
-         if (csrfToken) {
-            console.log('Token CSRF encontrado en cookie:', csrfToken.substring(0, 8) + '...');
-            return csrfToken;
+      // === UTILIDAD CSRF INLINE ===
+      var KallpaCSRF = {
+         TOKEN_COOKIE_NAME: 'Alfresco-CSRFToken',
+         TOKEN_HEADER_NAME: 'Alfresco-CSRFToken',
+
+         getToken: function() {
+            return this.getCookie(this.TOKEN_COOKIE_NAME);
+         },
+
+         getHeaders: function(additionalHeaders) {
+            var headers = {
+               'Content-Type': 'application/json'
+            };
+
+            var token = this.getToken();
+            if (token) {
+               headers[this.TOKEN_HEADER_NAME] = token;
+               console.log('🔒 Token CSRF agregado: ' + token.substring(0, 8) + '...');
+            } else {
+               console.log('⚠️ No hay token CSRF disponible');
+            }
+
+            if (additionalHeaders) {
+               for (var key in additionalHeaders) {
+                  headers[key] = additionalHeaders[key];
+               }
+            }
+
+            return headers;
+         },
+
+         fetch: function(url, options) {
+            options = options || {};
+            options.headers = this.getHeaders(options.headers);
+
+            console.log('📡 Enviando request con headers:', options.headers);
+
+            return fetch(url, options)
+               .then(function(response) {
+                  if (response.status === 403) {
+                     console.warn('🚫 CSRF: Request bloqueada (403)');
+                  }
+                  return response;
+               });
+         },
+
+         getCookie: function(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i = 0; i < ca.length; i++) {
+               var c = ca[i];
+               while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+               if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+         },
+
+         checkStatus: function() {
+            var token = this.getToken();
+            console.log('🔍 CSRF Status:', {
+               tokenPresent: !!token,
+               tokenValue: token ? token.substring(0, 8) + '...' : 'None',
+               allCookies: document.cookie
+            });
+            return !!token;
          }
-
-         // Método 2: Buscar otras variantes de nombres
-         var altToken = getCookie('CSRF-TOKEN') || getCookie('csrf-token') || getCookie('AlfCSRF');
-         if (altToken) {
-            console.log('Token CSRF alternativo encontrado:', altToken.substring(0, 8) + '...');
-            return altToken;
-         }
-
-         console.log('No se encontró token CSRF en cookies');
-         return null;
-      }
-
-      function getCookie(name) {
-         var nameEQ = name + "=";
-         var ca = document.cookie.split(';');
-         for(var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-         }
-         return null;
-      }
-
-      function checkCSRFStatus() {
-         var hasAlfresco = typeof Alfresco !== 'undefined';
-         var csrfToken = getCSRFTokenDirect();
-         var allCookies = document.cookie;
-
-         console.log('=== ESTADO CSRF COMPLETO ===');
-         console.log('Alfresco objeto disponible:', hasAlfresco);
-         console.log('Token CSRF encontrado:', csrfToken ? 'SÍ' : 'NO');
-         console.log('Todas las cookies:', allCookies);
-
-         return {
-            alfrescoLoaded: hasAlfresco,
-            csrfEnabled: !!csrfToken,
-            token: csrfToken,
-            cookieCount: allCookies.split(';').length
-         };
-      }
+      };
 
       // === FUNCIÓN PRINCIPAL ===
       function enviarRevision() {
-         document.getElementById('message').innerHTML = '<div style="color: blue; padding: 10px;">Enviando a revisión...</div>';
+         console.log('🚀 Iniciando envío a revisión...');
+
+         document.getElementById('message').innerHTML =
+            '<div style="color: blue; padding: 10px;">Enviando a revisión...</div>';
 
          var currentUrl = window.location.href;
          var siteMatch = currentUrl.match(/\/site\/([^\/]+)/);
@@ -178,51 +200,31 @@
             url += '?site=' + encodeURIComponent(siteId);
          }
 
-         // Headers básicos
-         var headers = {
-            'Content-Type': 'application/json',
-            'Referer': window.location.href
-         };
-
-         // Intentar agregar token CSRF
-         var csrfToken = getCSRFTokenDirect();
-         if (csrfToken) {
-            headers['Alfresco-CSRFToken'] = csrfToken;
-            console.log('✅ Token CSRF agregado a headers');
-         } else {
-            console.log('⚠️ Enviando request SIN token CSRF');
-         }
-
-         // DEBUG: Log información
-         console.log('🔍 URL actual:', currentUrl);
+         console.log('🔍 URL:', url);
          console.log('🔍 Site ID:', siteId);
-         console.log('🔍 URL de solicitud:', url);
-         console.log('🔍 Datos a enviar:', requestData);
-         console.log('📡 Enviando request:', { url: url, headers: headers });
+         console.log('🔍 Request Data:', requestData);
 
-         fetch(url, {
+         // Verificar estado CSRF
+         KallpaCSRF.checkStatus();
+
+         // Usar fetch con CSRF
+         KallpaCSRF.fetch(url, {
             method: 'POST',
-            headers: headers,
             body: JSON.stringify(requestData)
          })
          .then(function(response) {
-            console.log('🔍 Response status:', response.status);
-            console.log('🔍 Response URL:', response.url);
-            console.log('🔍 Response headers:', Array.from(response.headers.entries()));
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response headers:', Array.from(response.headers.entries()));
 
             if (!response.ok) {
-               if (response.status === 403) {
-                  throw new Error('CSRF_BLOCKED: El servidor bloqueó la request (CSRF funcionando)');
-               }
                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
             }
 
-            // Verificar Content-Type
-            const contentType = response.headers.get('content-type');
+            var contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-               return response.text().then(text => {
+               return response.text().then(function(text) {
                   console.error('🚨 Respuesta no es JSON:', text);
-                  throw new Error('Respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
+                  throw new Error('Respuesta no es JSON: ' + text.substring(0, 100));
                });
             }
 
@@ -231,19 +233,11 @@
          .then(function(data) {
             console.log('✅ Datos recibidos:', data);
 
-            // Mostrar información sobre la configuración del servidor
-            if (data.baseUrl) {
-               console.log('🌐 Base URL del servidor:', data.baseUrl);
-               console.log('🏠 Entorno detectado:', data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN');
-               window.alfrescoBaseUrl = data.baseUrl;
-            }
-
             if (data.success) {
                var locationText = data.filename ? ' (Archivo: ' + data.filename + ')' : '';
-               var environmentInfo = data.baseUrl ? '<br><small>Entorno: ' + data.baseUrl + '</small>' : '';
 
                document.getElementById('message').innerHTML =
-                  '<div style="color: green; padding: 10px;">✅ Archivo de confirmación enviado exitosamente' + locationText + environmentInfo + '</div>';
+                  '<div style="color: green; padding: 10px;">✅ Archivo de confirmación enviado exitosamente' + locationText + '</div>';
 
                setTimeout(function() {
                   if (siteId) {
@@ -253,70 +247,23 @@
                   }
                }, 2000);
             } else {
-               var environmentInfo = data.baseUrl ? '<br><small>Servidor: ' + data.baseUrl + '</small>' : '';
                document.getElementById('message').innerHTML =
-                  '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + environmentInfo + '</div>';
+                  '<div style="color: red; padding: 10px;">❌ Error: ' + data.message + '</div>';
             }
          })
          .catch(function(error) {
-            console.error('🚨 Error:', error);
-
-            if (error.message.indexOf('CSRF_BLOCKED') !== -1) {
-               document.getElementById('message').innerHTML =
-                  '<div style="color: orange; padding: 10px;"><strong>🔒 CSRF Funcionando:</strong> Request bloqueada por seguridad.<br>' +
-                  '<small>Esto confirma que CSRF está habilitado y funciona correctamente.</small></div>';
-            } else if (error.message.indexOf('403') !== -1) {
-               document.getElementById('message').innerHTML =
-                  '<div style="color: red; padding: 10px;"><strong>Error 403:</strong> Acceso denegado por CSRF.</div>';
-            } else {
-               document.getElementById('message').innerHTML =
-                  '<div style="color: red; padding: 10px;">❌ Error: ' + error.message + '<br><small>Revisa la consola para más detalles</small></div>';
-            }
-         });
-      }
-
-      // FUNCIÓN ADICIONAL: Para usar la baseUrl en otras partes si es necesario
-      function getAlfrescoBaseUrl() {
-         return window.alfrescoBaseUrl || window.location.origin;
-      }
-
-      // FUNCIÓN DE DEBUG: Para probar la configuración
-      function testServerConfig() {
-         console.log('🧪 Probando configuración del servidor...');
-
-         fetch('/share/proxy/alfresco/revision/procesar', {
-            method: 'POST',
-            headers: {
-               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({test: true})
-         })
-         .then(response => response.json())
-         .then(data => {
-            console.log('🔧 Configuración del servidor:', {
-               baseUrl: data.baseUrl,
-               environment: data.baseUrl && data.baseUrl.includes('localhost') ? 'DESARROLLO' : 'PRODUCCIÓN',
-               success: data.success,
-               message: data.message
-            });
-         })
-         .catch(error => {
-            console.error('❌ Error al probar configuración:', error);
+            console.error('🚨 Error completo:', error);
+            document.getElementById('message').innerHTML =
+               '<div style="color: red; padding: 10px;">❌ Error: ' + error.message + '</div>';
          });
       }
 
       // === INICIALIZACIÓN ===
       window.onload = function() {
-         // Solo logging básico en consola para debugging técnico si es necesario
+         console.log('📄 Página cargada');
          setTimeout(function() {
-            var status = checkCSRFStatus();
-
-            // Log silencioso para desarrolladores (solo en consola)
-            if (status.csrfEnabled) {
-               console.log('✅ CSRF habilitado y funcionando');
-            } else {
-               console.log('ℹ️ CSRF no detectado');
-            }
+            KallpaCSRF.checkStatus();
+            console.log('✅ KallpaCSRF inicializado');
          }, 1000);
       };
 

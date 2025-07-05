@@ -2,6 +2,7 @@ package com.dataservicesperu.kallpa.webscripts;
 
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService;
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService.DocumentSubmissionResult;
+import com.dataservicesperu.kallpa.interceptors.CSRFWebScriptInterceptor;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
 import org.apache.commons.logging.Log;
@@ -36,21 +37,19 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
     @Override
     public void execute(WebScriptRequest req, WebScriptResponse res) throws IOException {
         try {
-            // Log información básica para debugging CSRF
-            logger.info("=== DocumentSubmissionWebScript - REQUEST INFO ===");
-            logger.info("URL: " + req.getURL());
-            logger.info("Content-Type: " + req.getHeader("Content-Type"));
-            logger.info("Referer: " + req.getHeader("Referer"));
-
-            // Log específico del token CSRF
-            String csrfToken = req.getHeader("Alfresco-CSRFToken");
-            if (csrfToken != null && !csrfToken.trim().isEmpty()) {
-                logger.info("🔒 CSRF Token presente: " + csrfToken.substring(0, Math.min(8, csrfToken.length())) + "...");
-            } else {
-                logger.info("⚠️ CSRF Token: NO PRESENTE");
+            // ✅ VALIDACIÓN CSRF AUTOMÁTICA
+            if (!CSRFWebScriptInterceptor.validateCSRFToken(req, res)) {
+                logger.warn("🚫 CSRF: Request bloqueada para " + req.getURL());
+                CSRFWebScriptInterceptor.sendCSRFError(res);
+                return;
             }
 
-            // Ejecutar como system user para mayor seguridad
+            // Log información básica
+            logger.info("=== DocumentSubmissionWebScript - REQUEST VALIDADO ===");
+            logger.info("URL: " + req.getURL());
+            logger.info("Content-Type: " + req.getHeader("Content-Type"));
+
+            // Ejecutar como system user
             AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
                 @Override
                 public Void doWork() throws Exception {
@@ -72,22 +71,17 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
     }
 
     private void executeAsSystem(WebScriptRequest req, WebScriptResponse res) throws IOException {
-        // Obtener parámetros
+        // El resto del código permanece igual...
         String siteId = req.getParameter("site");
-        String currentUser = "admin"; // Ya que ejecutamos como system, usar admin como usuario
+        String currentUser = "admin";
 
-        logger.info("Procesando envío de documentos para usuario: " + currentUser +
+        logger.info("✅ CSRF validado - Procesando envío para usuario: " + currentUser +
                 (siteId != null ? " en sitio: " + siteId : " en carpeta personal"));
-        logger.info("Base URL configurada: " + baseUrl);
 
-        // Procesar la solicitud
         DocumentSubmissionResult result = documentSubmissionService.processSubmission(siteId, currentUser);
 
-        // Configurar respuesta
         res.setContentType("application/json");
         res.setContentEncoding("UTF-8");
-
-        // Headers CORS para desarrollo
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Alfresco-CSRFToken");
@@ -100,7 +94,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
             logger.error("❌ Error en procesamiento: " + result.getMessage());
         }
 
-        // Escribir respuesta JSON
         Writer writer = res.getWriter();
         String jsonResponse = buildJsonResponse(result);
         writer.write(jsonResponse);
@@ -114,7 +107,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
         json.append("\"message\": \"").append(escapeJson(result.getMessage())).append("\",");
         json.append("\"timestamp\": \"").append(java.time.Instant.now().toString()).append("\"");
 
-        // Siempre incluir baseUrl, pero verificar null por seguridad
         if (baseUrl != null) {
             json.append(",\"baseUrl\": \"").append(escapeJson(baseUrl)).append("\"");
         } else {
@@ -129,7 +121,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
             json.append(",\"nodeRef\": \"").append(escapeJson(result.getNodeRef())).append("\"");
         }
 
-        // Información del usuario actual
         try {
             String currentUser = serviceRegistry.getAuthenticationService().getCurrentUserName();
             json.append(",\"user\": \"").append(escapeJson(currentUser)).append("\"");
