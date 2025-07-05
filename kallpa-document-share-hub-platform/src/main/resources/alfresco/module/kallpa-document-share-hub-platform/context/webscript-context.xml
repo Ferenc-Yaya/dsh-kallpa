@@ -4,7 +4,6 @@
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-	<!-- WebScript de descarga pública -->
 	<bean id="webscript.com.dataservicesperu.kallpa.download.public-download.get"
 		  class="com.dataservicesperu.kallpa.webscripts.PublicDownloadWebScript"
 		  parent="webscript">
@@ -12,13 +11,11 @@
 		<property name="guestAccess" value="true"/>
 	</bean>
 
-	<!-- WebScript de envío de documentos -->
 	<bean id="webscript.com.dataservicesperu.kallpa.revision.procesar.post"
 		  class="com.dataservicesperu.kallpa.webscripts.DocumentSubmissionWebScript"
 		  parent="webscript">
 		<constructor-arg ref="documentSubmissionService" />
 		<constructor-arg ref="ServiceRegistry" />
-		<constructor-arg value="${alfresco.base.url}" />
 	</bean>
 
 </beans>

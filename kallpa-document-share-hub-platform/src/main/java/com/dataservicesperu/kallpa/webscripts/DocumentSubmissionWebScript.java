@@ -10,7 +10,6 @@ import org.springframework.extensions.webscripts.AbstractWebScript;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
 import org.springframework.extensions.webscripts.Status;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -21,14 +20,11 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
     private final DocumentSubmissionService documentSubmissionService;
     private final ServiceRegistry serviceRegistry;
-    private final String baseUrl;
 
     public DocumentSubmissionWebScript(DocumentSubmissionService documentSubmissionService,
-                                       ServiceRegistry serviceRegistry,
-                                       @Value("${alfresco.base.url}") String baseUrl) {
+                                       ServiceRegistry serviceRegistry) {
         this.documentSubmissionService = documentSubmissionService;
         this.serviceRegistry = serviceRegistry;
-        this.baseUrl = baseUrl;
     }
 
     @Override
@@ -59,9 +55,9 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
             res.setStatus(Status.STATUS_INTERNAL_SERVER_ERROR);
             res.setContentType("application/json");
             Writer writer = res.getWriter();
+            // CAMBIO: Ya no usar baseUrl aquí
             writer.write("{\"success\": false, \"message\": \"Error interno del servidor: " +
-                    e.getMessage().replace("\"", "\\\"") + "\", \"baseUrl\": \"" +
-                    escapeJson(baseUrl) + "\"}");
+                    e.getMessage().replace("\"", "\\\"") + "\"}");
             writer.flush();
         }
     }
@@ -72,7 +68,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
         logger.info("Procesando envío de documentos para usuario: " + currentUser +
                 (siteId != null ? " en sitio: " + siteId : " en carpeta personal"));
-        logger.info("Base URL configurada: " + baseUrl);
 
         DocumentSubmissionResult result = documentSubmissionService.processSubmission(siteId, currentUser);
 
@@ -103,12 +98,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
         json.append("\"success\": ").append(result.isSuccess()).append(",");
         json.append("\"message\": \"").append(escapeJson(result.getMessage())).append("\",");
         json.append("\"timestamp\": \"").append(java.time.Instant.now().toString()).append("\"");
-
-        if (baseUrl != null) {
-            json.append(",\"baseUrl\": \"").append(escapeJson(baseUrl)).append("\"");
-        } else {
-            json.append(",\"baseUrl\": \"\"");
-        }
 
         if (result.getFilename() != null) {
             json.append(",\"filename\": \"").append(escapeJson(result.getFilename())).append("\"");
