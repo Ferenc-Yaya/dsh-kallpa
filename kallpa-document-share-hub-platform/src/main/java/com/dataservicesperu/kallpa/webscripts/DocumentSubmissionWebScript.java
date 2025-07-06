@@ -2,6 +2,7 @@ package com.dataservicesperu.kallpa.webscripts;
 
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService;
 import com.dataservicesperu.kallpa.services.DocumentSubmissionService.DocumentSubmissionResult;
+import com.dataservicesperu.kallpa.interceptors.CSRFWebScriptInterceptor;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.ServiceRegistry;
 import org.apache.commons.logging.Log;
@@ -35,12 +36,13 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
             logger.info("Content-Type: " + req.getHeader("Content-Type"));
             logger.info("Referer: " + req.getHeader("Referer"));
 
-            String csrfToken = req.getHeader("Alfresco-CSRFToken");
-            if (csrfToken != null && !csrfToken.trim().isEmpty()) {
-                logger.info("🔒 CSRF Token presente: " + csrfToken.substring(0, Math.min(8, csrfToken.length())) + "...");
-            } else {
-                logger.info("⚠️ CSRF Token: NO PRESENTE");
+            if (!CSRFWebScriptInterceptor.validateCSRFToken(req, res)) {
+                logger.warn("🚫 CSRF: Validación fallida");
+                CSRFWebScriptInterceptor.sendCSRFError(res);
+                return;
             }
+
+            logger.info("✅ CSRF: Validación exitosa");
 
             AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
                 @Override
@@ -55,7 +57,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
             res.setStatus(Status.STATUS_INTERNAL_SERVER_ERROR);
             res.setContentType("application/json");
             Writer writer = res.getWriter();
-            // CAMBIO: Ya no usar baseUrl aquí
             writer.write("{\"success\": false, \"message\": \"Error interno del servidor: " +
                     e.getMessage().replace("\"", "\\\"") + "\"}");
             writer.flush();
