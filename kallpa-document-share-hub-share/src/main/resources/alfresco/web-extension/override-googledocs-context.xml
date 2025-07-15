@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Override Google Docs resource bundle to disable it -->
+    <bean id="google.docs.custom.resources" class="org.springframework.extensions.surf.util.ResourceBundleBootstrapComponent">
+        <property name="resourceBundles">
+            <list>
+                <!-- Empty list to disable Google Docs resources -->
+            </list>
+        </property>
+    </bean>
+
+</beans>

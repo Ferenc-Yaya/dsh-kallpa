@@ -1,0 +1,8 @@
+<extension>
+    <modules>
+        <module>
+            <id>GoogleDocs Module Extension</id>
+            <auto-deploy>false</auto-deploy>
+        </module>
+    </modules>
+</extension>
