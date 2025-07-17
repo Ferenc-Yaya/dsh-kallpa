@@ -14,6 +14,10 @@ import org.springframework.extensions.webscripts.Status;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DocumentSubmissionWebScript extends AbstractWebScript {
 
@@ -68,11 +72,38 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
     private void executeWithCurrentUser(WebScriptRequest req, WebScriptResponse res, String currentUser) throws IOException {
         String siteId = req.getParameter("site");
+        String folderId = req.getParameter("folder");
+
+        List<Map<String, String>> selectedFolders = null;
+        try {
+            String contentType = req.getHeader("Content-Type");
+            if (contentType != null && contentType.contains("application/json")) {
+                String content = req.getContent().getContent();
+                if (content != null && !content.trim().isEmpty()) {
+                    org.json.JSONObject jsonObject = new org.json.JSONObject(content);
+                    if (jsonObject.has("selectedFolders")) {
+                        org.json.JSONArray foldersArray = jsonObject.getJSONArray("selectedFolders");
+                        selectedFolders = new ArrayList<>();
+                        for (int i = 0; i < foldersArray.length(); i++) {
+                            org.json.JSONObject folderObj = foldersArray.getJSONObject(i);
+                            Map<String, String> folder = new HashMap<>();
+                            folder.put("id", folderObj.optString("id"));
+                            folder.put("name", folderObj.optString("name"));
+                            selectedFolders.add(folder);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Error parseando carpetas seleccionadas: " + e.getMessage());
+        }
 
         logger.info("Procesando envío de documentos para usuario: " + currentUser +
-                (siteId != null ? " en sitio: " + siteId : " en carpeta personal"));
+                (siteId != null ? " en sitio: " + siteId : " en carpeta personal") +
+                (folderId != null ? " en carpeta: " + folderId : "") +
+                (selectedFolders != null ? " con " + selectedFolders.size() + " carpetas seleccionadas" : ""));
 
-        DocumentSubmissionResult result = documentSubmissionService.processSubmission(siteId, currentUser);
+        DocumentSubmissionResult result = documentSubmissionService.processSubmission(siteId, currentUser, folderId, selectedFolders);
 
         res.setContentType("application/json");
         res.setContentEncoding("UTF-8");

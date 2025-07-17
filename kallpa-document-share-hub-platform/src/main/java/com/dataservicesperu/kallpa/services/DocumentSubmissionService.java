@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Map;
 
 public class DocumentSubmissionService {
 
@@ -34,9 +34,17 @@ public class DocumentSubmissionService {
     }
 
     public DocumentSubmissionResult processSubmission(String siteId, String username) {
+        return processSubmission(siteId, username, null, null);
+    }
+
+    public DocumentSubmissionResult processSubmission(String siteId, String username, String folderId) {
+        return processSubmission(siteId, username, folderId, null);
+    }
+
+    public DocumentSubmissionResult processSubmission(String siteId, String username, String folderId, List<Map<String, String>> selectedFolders) {
         try {
             SiteInfo siteInfo = null;
-            NodeRef targetFolder = getTargetFolder(siteId);
+            NodeRef targetFolder = getTargetFolder(siteId, folderId);
 
             if (siteId != null && !siteId.trim().isEmpty()) {
                 SiteService siteService = serviceRegistry.getSiteService();
@@ -54,7 +62,7 @@ public class DocumentSubmissionService {
                         filename, existingFile.toString());
             }
 
-            byte[] pdfContent = createConfirmationPdf(username, siteInfo);
+            byte[] pdfContent = createConfirmationPdf(username, siteInfo, selectedFolders);
 
             NodeRef pdfFile = serviceRegistry.getFileFolderService()
                     .create(targetFolder, filename, ContentModel.TYPE_CONTENT).getNodeRef();
@@ -78,20 +86,36 @@ public class DocumentSubmissionService {
     }
 
     private String generateFilename(SiteInfo siteInfo) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = dateFormat.format(new Date());
+
         if (siteInfo != null) {
             String siteName = siteInfo.getTitle();
             if (siteName == null || siteName.trim().isEmpty()) {
                 siteName = siteInfo.getShortName();
             }
             siteName = siteName.replaceAll("[^a-zA-Z0-9\\s-_]", "").trim();
-            return "ARCHIVOS SUBIDOS - " + siteName + ".pdf";
+            return "ARCHIVOS SUBIDOS - " + siteName + " - " + currentDate + ".pdf";
         } else {
-            return "ARCHIVOS SUBIDOS.pdf";
+            return "ARCHIVOS SUBIDOS - " + currentDate + ".pdf";
         }
     }
 
-    private NodeRef getTargetFolder(String siteId) {
+    private NodeRef getTargetFolder(String siteId, String folderId) {
         try {
+            if (folderId != null && !folderId.trim().isEmpty()) {
+                logger.info("Usando carpeta específica: " + folderId);
+
+                NodeRef folderRef = new NodeRef("workspace://SpacesStore/" + folderId);
+
+                if (serviceRegistry.getNodeService().exists(folderRef)) {
+                    logger.info("Carpeta encontrada: " + folderRef);
+                    return folderRef;
+                } else {
+                    logger.warn("Carpeta no encontrada: " + folderRef + ", usando carpeta por defecto");
+                }
+            }
+
             if (siteId != null && !siteId.trim().isEmpty()) {
                 logger.info("Obteniendo carpeta para sitio: " + siteId);
 
@@ -156,12 +180,12 @@ public class DocumentSubmissionService {
                 throw new RuntimeException("No se puede encontrar Company Home");
             }
         } catch (Exception e) {
-            logger.error("Error en getTargetFolder para sitio: " + siteId, e);
+            logger.error("Error en getTargetFolder para sitio: " + siteId + ", carpeta: " + folderId, e);
             throw new RuntimeException("Error obteniendo carpeta destino: " + e.getMessage());
         }
     }
 
-    private byte[] createConfirmationPdf(String username, SiteInfo siteInfo) throws Exception {
+    private byte[] createConfirmationPdf(String username, SiteInfo siteInfo, List<Map<String, String>> selectedFolders) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, baos);
@@ -195,6 +219,27 @@ public class DocumentSubmissionService {
         }
 
         document.add(new Paragraph(" ", normalFont));
+
+        if (selectedFolders != null && !selectedFolders.isEmpty()) {
+            Font folderHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.DARK_GRAY);
+            Paragraph folderHeader = new Paragraph("Carpetas Seleccionadas:", folderHeaderFont);
+            folderHeader.setSpacingBefore(10);
+            folderHeader.setSpacingAfter(10);
+            document.add(folderHeader);
+
+            Font folderFont = FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.BLACK);
+            for (Map<String, String> folder : selectedFolders) {
+                String folderName = folder.get("name");
+                if (folderName != null) {
+                    Paragraph folderItem = new Paragraph("• " + folderName, folderFont);
+                    folderItem.setIndentationLeft(20);
+                    folderItem.setSpacingAfter(5);
+                    document.add(folderItem);
+                }
+            }
+
+            document.add(new Paragraph(" ", normalFont));
+        }
 
         Font confirmFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLUE);
         Paragraph confirmation = new Paragraph(

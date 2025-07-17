@@ -29,20 +29,54 @@
          font-size: 16px;
          font-weight: bold;
       }
-      .info-box ul {
-         margin: 10px 0;
-         padding-left: 20px;
+      .folders-section {
+         background: #f8f9fa;
+         border: 1px solid #dee2e6;
+         border-radius: 8px;
+         padding: 20px;
+         margin-bottom: 25px;
       }
-      .info-box li {
-         margin-bottom: 8px;
+      .folders-section h3 {
+         margin-top: 0;
+         margin-bottom: 15px;
+         color: #495057;
+         font-size: 16px;
+         font-weight: bold;
+      }
+      .folder-item {
+         display: flex;
+         align-items: flex-start;
+         margin-bottom: 15px;
+         padding: 10px;
+         background: white;
+         border: 1px solid #e9ecef;
+         border-radius: 6px;
+      }
+      .folder-item:last-child {
+         margin-bottom: 0;
+      }
+      .folder-item input[type="radio"] {
+         margin-right: 12px;
+         margin-top: 2px;
+         transform: scale(1.2);
+      }
+      .folder-info {
+         flex: 1;
+      }
+      .folder-name {
+         font-weight: bold;
+         color: #495057;
+         margin-bottom: 4px;
+      }
+      .folder-description {
+         font-size: 14px;
+         color: #6c757d;
          line-height: 1.4;
       }
-      .highlight {
-         background: #bee5eb;
-         padding: 2px 4px;
-         border-radius: 3px;
-         font-weight: bold;
-         color: #155724;
+      .loading {
+         text-align: center;
+         color: #6c757d;
+         font-style: italic;
       }
       .btn {
          padding: 12px 25px;
@@ -90,10 +124,17 @@
       <div class="info-box">
          <h3>ℹ️ Proceso de Revisión de Documentos</h3>
          <ul>
-            <li><strong>Al enviar los documentos:</strong> El supervisor DSH procederá a <span class="highlight">proteger los documentos subidos</span> para garantizar la integridad durante el proceso de evaluación.</li>
-            <li><strong>Seguimiento del proceso:</strong> Recibirá actualizaciones constantes mediante <span class="highlight">notificaciones por correo electrónico</span> y podrá revisar el progreso a través de los <span class="highlight">comentarios del archivo de seguimiento</span> que se generará automáticamente.</li>
-            <li><strong>Resultado exitoso:</strong> Una vez que todos los documentos hayan sido aprobados satisfactoriamente, recibirá el documento oficial <span class="highlight">"INFORME DE HABILITACIÓN"</span> como certificación del cumplimiento de todos los requisitos.</li>
+            <li><strong>Al enviar los documentos:</strong> El supervisor DSH procederá a proteger los documentos subidos para garantizar la integridad durante el proceso de evaluación.</li>
+            <li><strong>Seguimiento del proceso:</strong> Recibirá actualizaciones constantes mediante notificaciones por correo electrónico y podrá revisar el progreso a través de los comentarios del archivo de seguimiento que se generará automáticamente.</li>
+            <li><strong>Resultado exitoso:</strong> Una vez que todos los documentos hayan sido aprobados satisfactoriamente, recibirá el documento oficial "INFORME DE HABILITACIÓN" como certificación del cumplimiento de todos los requisitos.</li>
          </ul>
+      </div>
+
+      <div class="folders-section">
+         <h3>📁 Seleccionar Carpeta a Incluir</h3>
+         <div id="folders-list" class="loading">
+            Cargando carpetas del sitio...
+         </div>
       </div>
 
       <div id="message"></div>
@@ -110,6 +151,8 @@
 
    <script>
       //<![CDATA[
+
+      var siteFolders = [];
 
       // === UTILIDAD CSRF INLINE ===
       var KallpaCSRF = {
@@ -128,9 +171,6 @@
             var token = this.getToken();
             if (token) {
                headers[this.TOKEN_HEADER_NAME] = token;
-               console.log('🔒 Token CSRF agregado: ' + token.substring(0, 8) + '...');
-            } else {
-               console.log('⚠️ No hay token CSRF disponible');
             }
 
             if (additionalHeaders) {
@@ -145,8 +185,6 @@
          fetch: function(url, options) {
             options = options || {};
             options.headers = this.getHeaders(options.headers);
-
-            console.log('📡 Enviando request con headers:', options.headers);
 
             return fetch(url, options)
                .then(function(response) {
@@ -166,22 +204,79 @@
                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
             }
             return null;
-         },
-
-         checkStatus: function() {
-            var token = this.getToken();
-            console.log('🔍 CSRF Status:', {
-               tokenPresent: !!token,
-               tokenValue: token ? token.substring(0, 8) + '...' : 'None',
-               allCookies: document.cookie
-            });
-            return !!token;
          }
       };
+
+      // === CARGAR CARPETAS ===
+      function loadSiteFolders() {
+         var currentUrl = window.location.href;
+         var siteMatch = currentUrl.match(/\/site\/([^\/]+)/);
+         var siteId = siteMatch ? siteMatch[1] : null;
+
+         if (!siteId) {
+            document.getElementById('folders-list').innerHTML =
+               '<div style="color: red;">No se pudo determinar el sitio actual</div>';
+            return;
+         }
+
+         var url = '/share/proxy/alfresco/kallpa/folders/site/' + siteId;
+
+         fetch(url)
+            .then(function(response) {
+               if (!response.ok) {
+                  throw new Error('HTTP ' + response.status);
+               }
+               return response.json();
+            })
+            .then(function(data) {
+               if (data.success) {
+                  siteFolders = data.folders;
+                  displayFolders(data.folders);
+               } else {
+                  document.getElementById('folders-list').innerHTML =
+                     '<div style="color: red;">Error: ' + data.message + '</div>';
+               }
+            })
+            .catch(function(error) {
+               console.error('Error cargando carpetas:', error);
+               document.getElementById('folders-list').innerHTML =
+                  '<div style="color: red;">Error cargando carpetas: ' + error.message + '</div>';
+            });
+      }
+
+      // === MOSTRAR CARPETAS ===
+      function displayFolders(folders) {
+         var html = '';
+
+         if (folders.length === 0) {
+            html = '<div style="color: #6c757d;">No hay carpetas en este sitio</div>';
+         } else {
+            folders.forEach(function(folder) {
+               html += '<div class="folder-item">';
+               html += '<input type="radio" name="selectedFolder" id="folder_' + folder.id + '" value="' + folder.id + '">';
+               html += '<div class="folder-info">';
+               html += '<div class="folder-name">' + escapeHtml(folder.name) + '</div>';
+               html += '</div>';
+               html += '</div>';
+            });
+         }
+
+         document.getElementById('folders-list').innerHTML = html;
+      }
 
       // === FUNCIÓN PRINCIPAL ===
       function enviarRevision() {
          console.log('🚀 Iniciando envío a revisión...');
+
+         var selectedFolders = getSelectedFolders();
+
+         if (selectedFolders.length === 0) {
+            document.getElementById('message').innerHTML =
+               '<div style="color: red; padding: 10px;">❌ Por favor selecciona una carpeta antes de enviar</div>';
+            return;
+         }
+
+         console.log('📁 Carpetas seleccionadas:', selectedFolders);
 
          document.getElementById('message').innerHTML =
             '<div style="color: blue; padding: 10px;">Enviando a revisión...</div>';
@@ -190,7 +285,9 @@
          var siteMatch = currentUrl.match(/\/site\/([^\/]+)/);
          var siteId = siteMatch ? siteMatch[1] : null;
 
-         var requestData = {};
+         var requestData = {
+            selectedFolders: selectedFolders
+         };
          if (siteId) {
             requestData.site = siteId;
          }
@@ -200,22 +297,11 @@
             url += '?site=' + encodeURIComponent(siteId);
          }
 
-         console.log('🔍 URL:', url);
-         console.log('🔍 Site ID:', siteId);
-         console.log('🔍 Request Data:', requestData);
-
-         // Verificar estado CSRF
-         KallpaCSRF.checkStatus();
-
-         // Usar fetch con CSRF
          KallpaCSRF.fetch(url, {
             method: 'POST',
             body: JSON.stringify(requestData)
          })
          .then(function(response) {
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', Array.from(response.headers.entries()));
-
             if (!response.ok) {
                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
             }
@@ -223,7 +309,6 @@
             var contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                return response.text().then(function(text) {
-                  console.error('🚨 Respuesta no es JSON:', text);
                   throw new Error('Respuesta no es JSON: ' + text.substring(0, 100));
                });
             }
@@ -231,8 +316,6 @@
             return response.json();
          })
          .then(function(data) {
-            console.log('✅ Datos recibidos:', data);
-
             if (data.success) {
                var locationText = data.filename ? ' (Archivo: ' + data.filename + ')' : '';
 
@@ -240,7 +323,9 @@
                   '<div style="color: green; padding: 10px;">✅ Archivo de confirmación enviado exitosamente' + locationText + '</div>';
 
                setTimeout(function() {
-                  if (siteId) {
+                  if (window.history && window.history.length > 1) {
+                     window.history.back();
+                  } else if (siteId) {
                      window.location.href = '/share/page/site/' + siteId + '/documentlibrary';
                   } else {
                      window.location.href = '/share/page/context/mine/myfiles';
@@ -258,13 +343,40 @@
          });
       }
 
+      // === UTILIDADES ===
+      function getSelectedFolders() {
+         var selected = [];
+         var radioButtons = document.getElementsByName('selectedFolder');
+
+         for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+               var folderId = radioButtons[i].value;
+               var folder = siteFolders.find(function(f) { return f.id === folderId; });
+               if (folder) {
+                  selected.push({
+                     id: folder.id,
+                     name: folder.name,
+                     description: folder.description || ''
+                  });
+               }
+               break;
+            }
+         }
+
+         return selected;
+      }
+
+      function escapeHtml(text) {
+         if (!text) return '';
+         var div = document.createElement('div');
+         div.textContent = text;
+         return div.innerHTML;
+      }
+
       // === INICIALIZACIÓN ===
       window.onload = function() {
          console.log('📄 Página cargada');
-         setTimeout(function() {
-            KallpaCSRF.checkStatus();
-            console.log('✅ KallpaCSRF inicializado');
-         }, 1000);
+         loadSiteFolders();
       };
 
       //]]>
