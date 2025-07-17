@@ -75,6 +75,8 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
         String folderId = req.getParameter("folder");
 
         List<Map<String, String>> selectedFolders = null;
+        String selectedFolderId = null;
+
         try {
             String contentType = req.getHeader("Content-Type");
             if (contentType != null && contentType.contains("application/json")) {
@@ -90,12 +92,23 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
                             folder.put("id", folderObj.optString("id"));
                             folder.put("name", folderObj.optString("name"));
                             selectedFolders.add(folder);
+
+                            // Usar la primera (y única) carpeta seleccionada como destino
+                            if (selectedFolderId == null) {
+                                selectedFolderId = folderObj.optString("id");
+                            }
                         }
                     }
                 }
             }
         } catch (Exception e) {
             logger.warn("Error parseando carpetas seleccionadas: " + e.getMessage());
+        }
+
+        // Si se seleccionó una carpeta específica, usarla como destino en lugar del folderId de la URL
+        if (selectedFolderId != null && !selectedFolderId.trim().isEmpty()) {
+            folderId = selectedFolderId;
+            logger.info("Usando carpeta seleccionada como destino: " + selectedFolderId);
         }
 
         logger.info("Procesando envío de documentos para usuario: " + currentUser +
