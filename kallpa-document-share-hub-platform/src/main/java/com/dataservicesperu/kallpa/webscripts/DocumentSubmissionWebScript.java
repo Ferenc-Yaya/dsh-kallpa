@@ -44,10 +44,13 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
             logger.info("✅ CSRF: Validación exitosa");
 
+            final String currentUser = serviceRegistry.getAuthenticationService().getCurrentUserName();
+            logger.info("Usuario actual autenticado: " + currentUser);
+
             AuthenticationUtil.runAsSystem(new AuthenticationUtil.RunAsWork<Void>() {
                 @Override
                 public Void doWork() throws Exception {
-                    executeAsSystem(req, res);
+                    executeWithCurrentUser(req, res, currentUser);
                     return null;
                 }
             });
@@ -63,9 +66,8 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
         }
     }
 
-    private void executeAsSystem(WebScriptRequest req, WebScriptResponse res) throws IOException {
+    private void executeWithCurrentUser(WebScriptRequest req, WebScriptResponse res, String currentUser) throws IOException {
         String siteId = req.getParameter("site");
-        String currentUser = "admin";
 
         logger.info("Procesando envío de documentos para usuario: " + currentUser +
                 (siteId != null ? " en sitio: " + siteId : " en carpeta personal"));
@@ -88,17 +90,18 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
         }
 
         Writer writer = res.getWriter();
-        String jsonResponse = buildJsonResponse(result);
+        String jsonResponse = buildJsonResponse(result, currentUser);
         writer.write(jsonResponse);
         writer.flush();
     }
 
-    private String buildJsonResponse(DocumentSubmissionResult result) {
+    private String buildJsonResponse(DocumentSubmissionResult result, String currentUser) {
         StringBuilder json = new StringBuilder();
         json.append("{");
         json.append("\"success\": ").append(result.isSuccess()).append(",");
         json.append("\"message\": \"").append(escapeJson(result.getMessage())).append("\",");
         json.append("\"timestamp\": \"").append(java.time.Instant.now().toString()).append("\"");
+        json.append(",\"user\": \"").append(escapeJson(currentUser)).append("\"");
 
         if (result.getFilename() != null) {
             json.append(",\"filename\": \"").append(escapeJson(result.getFilename())).append("\"");
@@ -106,13 +109,6 @@ public class DocumentSubmissionWebScript extends AbstractWebScript {
 
         if (result.getNodeRef() != null) {
             json.append(",\"nodeRef\": \"").append(escapeJson(result.getNodeRef())).append("\"");
-        }
-
-        try {
-            String currentUser = serviceRegistry.getAuthenticationService().getCurrentUserName();
-            json.append(",\"user\": \"").append(escapeJson(currentUser)).append("\"");
-        } catch (Exception e) {
-            logger.warn("No se pudo obtener usuario actual: " + e.getMessage());
         }
 
         json.append("}");

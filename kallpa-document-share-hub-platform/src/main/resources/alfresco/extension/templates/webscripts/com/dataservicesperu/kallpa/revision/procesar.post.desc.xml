@@ -2,7 +2,7 @@
     <shortname>Enviar a Revisión</shortname>
     <description>Crea archivo de texto con documentos subidos</description>
     <url>/revision/procesar</url>
-    <authentication>none</authentication>
+    <authentication>user</authentication>
     <transaction>required</transaction>
     <format default="json">argument</format>
 </webscript>
