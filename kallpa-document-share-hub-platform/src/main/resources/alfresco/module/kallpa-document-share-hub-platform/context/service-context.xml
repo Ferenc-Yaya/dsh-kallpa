@@ -14,4 +14,8 @@
         <constructor-arg value="${alfresco.base.url}" />
     </bean>
 
+    <bean id="addApprovedTag" class="com.dataservicesperu.kallpa.actions.AddApprovedTagActionExecuter" parent="action-executer">
+        <constructor-arg ref="ServiceRegistry" />
+        <constructor-arg ref="TaggingService" />
+    </bean>
 </beans>

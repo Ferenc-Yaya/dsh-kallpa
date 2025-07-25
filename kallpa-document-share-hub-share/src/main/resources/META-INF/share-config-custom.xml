@@ -146,16 +146,28 @@
                 <param name="failureMessage">kallpa.doclib.action.createQrDownload.msg.failure</param>
                 <evaluator>kallpa.createQR.evaluator.pdfEvaluator</evaluator>
             </action>
+            <action id="addApprovedTag"
+                    type="javascript"
+                    label="kallpa.doclib.action.addApprovedTag.label"
+                    icon="tag">
+                <param name="function">onActionSimpleRepoAction</param>
+                <param name="action">addApprovedTag</param>
+                <param name="successMessage">kallpa.doclib.action.addApprovedTag.msg.success</param>
+                <param name="failureMessage">kallpa.doclib.action.addApprovedTag.msg.failure</param>
+            </action>
         </actions>
         <actionGroups>
             <actionGroup id="document-browse">
                 <action index="400" id="createQrDownload" />
+                <action index="401" id="addApprovedTag" />
             </actionGroup>
             <actionGroup id="document-details">
                 <action index="400" id="createQrDownload" />
+                <action index="401" id="addApprovedTag" />
             </actionGroup>
             <actionGroup id="document-selected">
                 <action index="400" id="createQrDownload" />
+                <action index="401" id="addApprovedTag" />
             </actionGroup>
         </actionGroups>
     </config>
