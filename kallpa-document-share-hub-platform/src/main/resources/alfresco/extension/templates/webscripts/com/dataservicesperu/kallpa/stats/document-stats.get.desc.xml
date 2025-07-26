@@ -1,0 +1,8 @@
+<webscript>
+    <shortname>Document Statistics</shortname>
+    <description>Obtiene estadísticas de documentos por etiquetas de aprobación</description>
+    <url>/kallpa/stats/documents</url>
+    <authentication>user</authentication>
+    <transaction>required</transaction>
+    <format default="json">argument</format>
+</webscript>

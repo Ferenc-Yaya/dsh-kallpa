@@ -24,4 +24,10 @@
 		<constructor-arg ref="ServiceRegistry" />
 	</bean>
 
+	<bean id="webscript.com.dataservicesperu.kallpa.stats.document-stats.get"
+		  class="com.dataservicesperu.kallpa.webscripts.DocumentStatsWebScript"
+		  parent="webscript">
+		<constructor-arg ref="ServiceRegistry" />
+		<constructor-arg ref="TaggingService" />
+	</bean>
 </beans>

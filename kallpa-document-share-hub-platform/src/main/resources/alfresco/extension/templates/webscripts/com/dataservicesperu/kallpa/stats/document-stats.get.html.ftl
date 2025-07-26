@@ -1,0 +1,1 @@
+<#-- Template vacío - la respuesta se maneja en Java -->
