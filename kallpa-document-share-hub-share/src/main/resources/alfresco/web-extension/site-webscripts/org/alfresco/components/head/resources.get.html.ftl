@@ -184,6 +184,9 @@
                   if (text === 'aprobado') {
                       element.textContent = 'APROBADO';
                       element.style.cssText = 'background-color: #28a745 !important; color: white !important; font-weight: bold !important; text-transform: uppercase !important; border: 2px solid #1e7e34 !important; border-radius: 4px !important; padding: 3px 8px !important; font-size: 11px !important; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3) !important; margin-right: 5px !important; display: inline-block !important; text-decoration: none !important;';
+                  } else if (text === 'desaprobado') {
+                      element.textContent = 'DESAPROBADO';
+                      element.style.cssText = 'background-color: #dc3545 !important; color: white !important; font-weight: bold !important; text-transform: uppercase !important; border: 2px solid #c82333 !important; border-radius: 4px !important; padding: 3px 8px !important; font-size: 11px !important; box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3) !important; margin-right: 5px !important; display: inline-block !important; text-decoration: none !important;';
                   }
               }
           }
@@ -236,6 +239,33 @@
       .tag-link[title="APROBADO"]:hover {
          background-color: #1e7e34 !important;
          box-shadow: 0 3px 6px rgba(40, 167, 69, 0.5) !important;
+         transform: translateY(-1px) !important;
+      }
+
+      .disapproved-tag-enhanced,
+      .tag[title="DESAPROBADO"],
+      .tag-item[title="DESAPROBADO"],
+      .tag-link[title="DESAPROBADO"] {
+         background-color: #dc3545 !important;
+         color: white !important;
+         font-weight: bold !important;
+         text-transform: uppercase !important;
+         border: 2px solid #c82333 !important;
+         border-radius: 4px !important;
+         padding: 3px 8px !important;
+         font-size: 11px !important;
+         box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3) !important;
+         margin-right: 5px !important;
+         display: inline-block !important;
+         text-decoration: none !important;
+      }
+
+      .disapproved-tag-enhanced:hover,
+      .tag[title="DESAPROBADO"]:hover,
+      .tag-item[title="DESAPROBADO"]:hover,
+      .tag-link[title="DESAPROBADO"]:hover {
+         background-color: #c82333 !important;
+         box-shadow: 0 3px 6px rgba(220, 53, 69, 0.5) !important;
          transform: translateY(-1px) !important;
       }
    </style>

@@ -155,19 +155,31 @@
                 <param name="successMessage">kallpa.doclib.action.addApprovedTag.msg.success</param>
                 <param name="failureMessage">kallpa.doclib.action.addApprovedTag.msg.failure</param>
             </action>
+            <action id="addDisapprovedTag"
+                    type="javascript"
+                    label="kallpa.doclib.action.addDisapprovedTag.label"
+                    icon="tag">
+                <param name="function">onActionSimpleRepoAction</param>
+                <param name="action">addDisapprovedTag</param>
+                <param name="successMessage">kallpa.doclib.action.addDisapprovedTag.msg.success</param>
+                <param name="failureMessage">kallpa.doclib.action.addDisapprovedTag.msg.failure</param>
+            </action>
         </actions>
         <actionGroups>
             <actionGroup id="document-browse">
                 <action index="400" id="createQrDownload" />
                 <action index="401" id="addApprovedTag" />
+                <action index="402" id="addDisapprovedTag" />
             </actionGroup>
             <actionGroup id="document-details">
                 <action index="400" id="createQrDownload" />
                 <action index="401" id="addApprovedTag" />
+                <action index="402" id="addDisapprovedTag" />
             </actionGroup>
             <actionGroup id="document-selected">
                 <action index="400" id="createQrDownload" />
                 <action index="401" id="addApprovedTag" />
+                <action index="402" id="addDisapprovedTag" />
             </actionGroup>
         </actionGroups>
     </config>

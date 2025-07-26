@@ -18,4 +18,9 @@
         <constructor-arg ref="ServiceRegistry" />
         <constructor-arg ref="TaggingService" />
     </bean>
+
+    <bean id="addDisapprovedTag" class="com.dataservicesperu.kallpa.actions.AddDisapprovedTagActionExecuter" parent="action-executer">
+        <constructor-arg ref="ServiceRegistry" />
+        <constructor-arg ref="TaggingService" />
+    </bean>
 </beans>

@@ -12,14 +12,14 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.List;
 
-public class AddApprovedTagActionExecuter extends ActionExecuterAbstractBase {
+public class AddDisapprovedTagActionExecuter extends ActionExecuterAbstractBase {
 
-    private static Log logger = LogFactory.getLog(AddApprovedTagActionExecuter.class);
+    private static Log logger = LogFactory.getLog(AddDisapprovedTagActionExecuter.class);
 
     private final ServiceRegistry serviceRegistry;
     private final TaggingService taggingService;
 
-    public AddApprovedTagActionExecuter(ServiceRegistry serviceRegistry, TaggingService taggingService) {
+    public AddDisapprovedTagActionExecuter(ServiceRegistry serviceRegistry, TaggingService taggingService) {
         this.serviceRegistry = serviceRegistry;
         this.taggingService = taggingService;
     }
@@ -39,7 +39,7 @@ public class AddApprovedTagActionExecuter extends ActionExecuterAbstractBase {
             String fileName = (String) serviceRegistry.getNodeService()
                     .getProperty(actionedUponNodeRef, ContentModel.PROP_NAME);
 
-            logger.info("Procesando etiqueta APROBADO para documento: " + fileName);
+            logger.info("Procesando etiqueta DESAPROBADO para documento: " + fileName);
 
             List<String> currentTags = taggingService.getTags(actionedUponNodeRef);
             for (String tag : currentTags) {
@@ -49,13 +49,13 @@ public class AddApprovedTagActionExecuter extends ActionExecuterAbstractBase {
                 }
             }
 
-            taggingService.addTag(actionedUponNodeRef, "APROBADO");
+            taggingService.addTag(actionedUponNodeRef, "DESAPROBADO");
 
-            logger.info("Etiqueta APROBADO agregada exitosamente al documento: " + fileName);
+            logger.info("Etiqueta DESAPROBADO agregada exitosamente al documento: " + fileName);
 
         } catch (Exception e) {
-            logger.error("Error agregando etiqueta APROBADO", e);
-            throw new RuntimeException("Error agregando etiqueta APROBADO: " + e.getMessage());
+            logger.error("Error agregando etiqueta DESAPROBADO", e);
+            throw new RuntimeException("Error agregando etiqueta DESAPROBADO: " + e.getMessage());
         }
     }
 }
