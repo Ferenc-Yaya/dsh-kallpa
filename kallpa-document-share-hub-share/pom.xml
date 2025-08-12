@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.dataservicesperu.kallpa</groupId>
         <artifactId>kallpa-document-share-hub</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3-SNAPSHOT</version>
     </parent>
 
     <properties>
